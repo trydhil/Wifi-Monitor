@@ -3,7 +3,6 @@ import datetime
 import requests  # <-- tambahkan ini
 from network import get_wifi_info
 from speedtest_lib import run_speedtest
-
 def calculate_score(download, upload, ping, signal):
     """
     Hitung skor 0-100 berdasarkan parameter:

@@ -1,0 +1,63 @@
+^C[AGENT] Mengambil data WiFi...
+Traceback (most recent call last):
+  File "C:\Users\ASUS\kerja\wifi-monitor\python-agent\agent.py", line 92, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\ASUS\kerja\wifi-monitor\python-agent\agent.py", line 51, in main
+    speedtest_result = run_speedtest()
+  File "C:\Users\ASUS\kerja\wifi-monitor\python-agent\speedtest_lib.py", line 10, in run_speedtest
+    st.get_best_server()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python314\Lib\site-packages\speedtest.py", line 1473, in get_best_server
+    h.request("GET", path, headers=headers)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python314\Lib\http\client.py", line 1358, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python314\Lib\http\client.py", line 1404, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python314\Lib\http\client.py", line 1353, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python314\Lib\http\client.py", line 1113, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python314\Lib\http\client.py", line 1057, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python314\Lib\site-packages\speedtest.py", line 426, in connect
+    self.sock = socket.create_connection(
+                ~~~~~~~~~~~~~~~~~~~~~~~~^
+        (self.host, self.port),
+        ^^^^^^^^^^^^^^^^^^^^^^^
+        self.timeout,
+        ^^^^^^^^^^^^^
+        self.source_address
+        ^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python314\Lib\socket.py", line 846, in create_connection
+    for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+               ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python314\Lib\socket.py", line 983, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+^C[AGENT] Mengambil data WiFi...
+{"tanggal": "2026-06-20", "jam": "18:29:15", "ssid": "Fadhil_5G", "download": 8.3, "upload": 11.78, "ping": 92.85, "signal": -57, "score": 16, "kategori": "Buruk"}
+[OK] Data berhasil dikirim ke server
+[AGENT] Mengambil data WiFi...
+{"tanggal": "2026-06-20", "jam": "21:24:29", "ssid": "Fadhil_5G", "download": 4.94, "upload": 29.23, "ping": 89.0, "signal": -57, "score": 23, "kategori": "Buruk"}
+[OK] Data berhasil dikirim ke server
+ ^C[AGENT] Mengambil data WiFi...
+{"tanggal": "2026-06-20", "jam": "22:27:52", "ssid": "Fadhil_5G", "download": 1.99, "upload": 16.79, "ping": 33.76, "signal": -57, "score": 23, "kategori": "Buruk"}
+[ERROR] Gagal mengirim ke server: HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=10)
+[AGENT] Mengambil data WiFi...
+{"tanggal": "2026-06-23", "jam": "08:56:47", "ssid": "P R O P A M", "download": 11.92, "upload": 8.35, "ping": 543.53, "signal": -68, "score": 19, "kategori": "Buruk"}
+[ERROR] Gagal mengirim ke server: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/scan (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+^C[AGENT] Mengambil data WiFi...
+[ERROR] Speedtest gagal: HTTP Error 403: Forbidden
+[ERROR] Speedtest gagal, pakai data parsial
+{"tanggal": "2026-06-23", "jam": "09:05:02", "ssid": "P R O P A M", "download": 0, "upload": 0, "ping": 0, "signal": -58, "score": 7, "kategori": "Buruk"}
+[OK] Data berhasil dikirim ke server
