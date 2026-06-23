@@ -61,3 +61,13 @@ KeyboardInterrupt
 [ERROR] Speedtest gagal, pakai data parsial
 {"tanggal": "2026-06-23", "jam": "09:05:02", "ssid": "P R O P A M", "download": 0, "upload": 0, "ping": 0, "signal": -58, "score": 7, "kategori": "Buruk"}
 [OK] Data berhasil dikirim ke server
+[AGENT] Mengambil data WiFi...
+[ERROR] Speedtest gagal: Unable to connect to servers to test latency.
+[ERROR] Speedtest gagal, pakai data parsial
+{"tanggal": "2026-06-23", "jam": "10:00:04", "ssid": "P R O P A M", "download": 0, "upload": 0, "ping": 0, "signal": -57, "score": 7, "kategori": "Buruk"}
+[OK] Data berhasil dikirim ke server
+[AGENT] Mengambil data WiFi...
+[ERROR] Speedtest gagal: [WinError 10054] An existing connection was forcibly closed by the remote host
+[ERROR] Speedtest gagal, pakai data parsial
+{"tanggal": "2026-06-23", "jam": "10:05:10", "ssid": "P R O P A M", "download": 0, "upload": 0, "ping": 0, "signal": -57, "score": 7, "kategori": "Buruk"}
+[OK] Data berhasil dikirim ke server
