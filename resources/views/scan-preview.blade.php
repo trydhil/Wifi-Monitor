@@ -21,25 +21,32 @@
 {{-- ===== PILIH STANDAR ===== --}}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body py-2">
-        <form method="GET" action="{{ route('scan.manual') }}" class="d-flex align-items-center gap-3 flex-wrap">
-            <label class="form-label mb-0 fw-semibold text-nowrap">
-                <i class="bi bi-sliders me-1 text-primary"></i>Standar Penilaian:
-            </label>
-            <select name="standar" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
-                @foreach($standards as $std)
-                    <option value="{{ $std['key'] }}" {{ $activeKey === $std['key'] ? 'selected' : '' }}>
-                        {{ $std['label'] }}
-                    </option>
-                @endforeach
-            </select>
-            <small class="text-muted fst-italic">
-                {{ collect($standards)->firstWhere('key', $activeKey)['deskripsi'] ?? '' }}
-            </small>
-            {{-- Simpan state supaya scan ulang pakai standar yang sama --}}
-            <button type="submit" class="btn btn-primary btn-sm ms-auto">
-                <i class="bi bi-arrow-repeat me-1"></i>Scan Ulang
-            </button>
-        </form>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            {{-- Ganti standar: TIDAK scan ulang, cuma hitung ulang skor --}}
+            <form method="GET" action="{{ route('scan.manual.standar') }}" class="d-flex align-items-center gap-3 flex-wrap mb-0">
+                <label class="form-label mb-0 fw-semibold text-nowrap">
+                    <i class="bi bi-sliders me-1 text-primary"></i>Standar Penilaian:
+                </label>
+                <select name="standar" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                    @foreach($standards as $std)
+                        <option value="{{ $std['key'] }}" {{ $activeKey === $std['key'] ? 'selected' : '' }}>
+                            {{ $std['label'] }}
+                        </option>
+                    @endforeach
+                </select>
+                <small class="text-muted fst-italic">
+                    {{ collect($standards)->firstWhere('key', $activeKey)['deskripsi'] ?? '' }}
+                </small>
+            </form>
+
+            {{-- Scan ulang: jalankan agent.py lagi (±10-60 detik) --}}
+            <form method="GET" action="{{ route('scan.manual') }}" class="mb-0 ms-auto">
+                <input type="hidden" name="standar" value="{{ $activeKey }}">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-arrow-repeat me-1"></i>Scan Ulang
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -139,6 +146,37 @@
 
     {{-- ===== INFO PANEL ===== --}}
     <div class="col-md-5">
+
+        {{-- Perbandingan Antar Standar --}}
+        @if(!empty($comparisons))
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-2">
+                    <i class="bi bi-bar-chart-steps text-primary me-1"></i>Perbandingan Antar Standar
+                </h6>
+                <p class="small text-muted mb-2">Skor data scan ini kalau dinilai pakai standar lain:</p>
+                <table class="table table-sm mb-0">
+                    @foreach($comparisons as $cmp)
+                    <tr class="{{ $cmp['key'] === $activeKey ? 'table-primary' : '' }}">
+                        <td class="small">
+                            {{ $cmp['label'] }}
+                            @if($cmp['key'] === $activeKey)
+                                <i class="bi bi-check-circle-fill text-primary ms-1" title="Standar aktif"></i>
+                            @endif
+                        </td>
+                        <td class="text-end">
+                            <span class="badge bg-{{ $cmp['score'] >= 75 ? 'success' : ($cmp['score'] >= 60 ? 'warning' : 'danger') }}">
+                                {{ $cmp['score'] }}
+                            </span>
+                        </td>
+                        <td class="small text-muted text-end" style="width: 90px;">{{ $cmp['kategori'] }}</td>
+                    </tr>
+                    @endforeach
+                </table>
+            </div>
+        </div>
+        @endif
+
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
                 <h6 class="fw-semibold mb-2">

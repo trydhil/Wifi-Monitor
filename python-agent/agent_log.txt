@@ -130,3 +130,36 @@ KeyboardInterrupt
 [AGENT] Interface: WLAN — Fadhil_5G
 {"tanggal": "2026-06-24", "jam": "21:11:03", "interface": "WLAN", "ssid": "Fadhil_5G", "download": 20.83, "upload": 29.41, "ping": 68.56, "signal": -58, "score": 29, "kategori": "Buruk"}
 [ERROR] Gagal mengirim ke server: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/scan (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[AGENT] Mendeteksi interface jaringan aktif...
+[AGENT] Interface: WLAN — AP_TIK_POLDA
+{"tanggal": "2026-06-25", "jam": "10:54:38", "interface": "WLAN", "ssid": "AP_TIK_POLDA", "download": 18.4, "upload": 4.56, "ping": 20.81, "signal": -66, "score": 30, "kategori": "Buruk"}
+[OK] Data berhasil dikirim ke server
+[AGENT] Mendeteksi interface jaringan aktif...
+[AGENT] Interface: WLAN — AP_TIK_POLDA
+[ERROR] Speedtest gagal (percobaan 1/2): Unable to connect to servers to test latency.
+[ERROR] Speedtest gagal (percobaan 2/2): Unable to connect to servers to test latency.
+[ERROR] Speedtest gagal setelah 2 percobaan: Unable to connect to servers to test latency.
+[ERROR] Speedtest gagal, pakai data parsial
+{"tanggal": "2026-06-25", "jam": "11:00:10", "interface": "WLAN", "ssid": "AP_TIK_POLDA", "download": 0, "upload": 0, "ping": 0, "signal": -58, "score": 7, "kategori": "Buruk"}
+[OK] Data berhasil dikirim ke server
+[AGENT] Mendeteksi interface jaringan aktif...
+[AGENT] Interface: WLAN — AP_TIK_POLDA
+{"tanggal": "2026-06-25", "jam": "11:05:27", "interface": "WLAN", "ssid": "AP_TIK_POLDA", "download": 11.75, "upload": 9.59, "ping": 25.66, "signal": -58, "score": 26, "kategori": "Buruk"}
+[OK] Data berhasil dikirim ke server
+[AGENT] Mendeteksi interface jaringan aktif...
+[AGENT] Interface: WLAN — AP_TIK_POLDA
+{"tanggal": "2026-06-25", "jam": "11:11:02", "interface": "WLAN", "ssid": "AP_TIK_POLDA", "download": 17.54, "upload": 11.06, "ping": 21.13, "signal": -58, "score": 31, "kategori": "Buruk"}
+[OK] Data berhasil dikirim ke server
+[AGENT] Mendeteksi interface jaringan aktif...
+[AGENT] Interface: WLAN — Ruang Vicon
+[ERROR] Speedtest gagal (percobaan 1/2): Unable to connect to servers to test latency.
+{"tanggal": "2026-06-25", "jam": "12:00:54", "interface": "WLAN", "ssid": "Ruang Vicon", "download": 0.28, "upload": 3.98, "ping": 92.65, "signal": -58, "score": 9, "kategori": "Buruk"}
+[OK] Data berhasil dikirim ke server
+[AGENT] Mendeteksi interface jaringan aktif...
+[AGENT] Interface: WLAN — P R O P A M
+{"tanggal": "2026-06-25", "jam": "12:05:27", "interface": "WLAN", "ssid": "P R O P A M", "download": 7.74, "upload": 2.03, "ping": 39.4, "signal": -57, "score": 15, "kategori": "Buruk"}
+[OK] Data berhasil dikirim ke server
+[AGENT] Mendeteksi interface jaringan aktif...
+[AGENT] Interface: WLAN — P R O P A M
+{"tanggal": "2026-06-25", "jam": "12:11:23", "interface": "WLAN", "ssid": "P R O P A M", "download": 3.13, "upload": 3.94, "ping": 272.88, "signal": -57, "score": 10, "kategori": "Buruk"}
+[OK] Data berhasil dikirim ke server

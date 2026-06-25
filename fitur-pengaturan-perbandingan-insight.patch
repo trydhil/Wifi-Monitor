@@ -1,0 +1,896 @@
+diff --git a/app/Http/Controllers/DashboardController.php b/app/Http/Controllers/DashboardController.php
+index dcb675d..63c8885 100644
+--- a/app/Http/Controllers/DashboardController.php
++++ b/app/Http/Controllers/DashboardController.php
+@@ -3,6 +3,7 @@
+ namespace App\Http\Controllers;
+ 
+ use App\Models\Scan;
++use App\Services\InsightService;
+ use Illuminate\Support\Facades\DB;
+ 
+ class DashboardController extends Controller
+@@ -45,12 +46,16 @@ public function index()
+             ->reverse()  // urut dari lama ke baru supaya grafik runtut
+             ->values();
+ 
++        // --- Insight otomatis dari pola data historis ---
++        $insights = InsightService::generate();
++
+         return view('dashboard', compact(
+             'stats',
+             'latest',
+             'ssidList',
+             'chartDaily',
+-            'chartMetrics'
++            'chartMetrics',
++            'insights'
+         ));
+     }
+ }
+\ No newline at end of file
+diff --git a/app/Http/Controllers/ManualScanController.php b/app/Http/Controllers/ManualScanController.php
+index 866b6c4..87dd2ef 100644
+--- a/app/Http/Controllers/ManualScanController.php
++++ b/app/Http/Controllers/ManualScanController.php
+@@ -44,6 +44,9 @@ public function scan(Request $request)
+             return back()->with('error', $data['error']);
+         }
+ 
++        // Cache data mentah supaya ganti standar nanti tidak perlu scan ulang
++        $request->session()->put('last_scan_raw', $data);
++
+         // Recalculate skor pakai standar aktif dari session
+         $scored = ScoringService::calculate(
+             download:  $data['download']  ?? 0,
+@@ -57,12 +60,78 @@ interface: $data['interface'] ?? 'WLAN',
+         $data = array_merge($data, $scored);
+ 
+         return view('scan-preview', [
+-            'scan'      => $data,
+-            'standards' => ScoringService::allStandards(),
+-            'activeKey' => ScoringService::activeKey(),
++            'scan'        => $data,
++            'standards'   => ScoringService::allStandards(),
++            'activeKey'   => ScoringService::activeKey(),
++            'comparisons' => $this->compareAllStandards($data),
++        ]);
++    }
++
++    /**
++     * Ganti standar penilaian TANPA menjalankan scan ulang.
++     * Pakai data mentah scan terakhir yang di-cache di session,
++     * cuma hitung ulang skornya pakai standar baru.
++     */
++    public function setStandar(Request $request)
++    {
++        if ($request->filled('standar')) {
++            $request->session()->put('scoring_standar', $request->standar);
++        }
++
++        $raw = $request->session()->get('last_scan_raw');
++
++        // Belum pernah scan sama sekali -> jalankan scan pertama kali
++        if (!$raw) {
++            return $this->scan($request);
++        }
++
++        $scored = ScoringService::calculate(
++            download:  $raw['download']  ?? 0,
++            upload:    $raw['upload']    ?? 0,
++            ping:      $raw['ping']      ?? 0,
++            signal:    $raw['signal']    ?? null,
++            interface: $raw['interface'] ?? 'WLAN',
++        );
++
++        $data = array_merge($raw, $scored);
++
++        return view('scan-preview', [
++            'scan'        => $data,
++            'standards'   => ScoringService::allStandards(),
++            'activeKey'   => ScoringService::activeKey(),
++            'comparisons' => $this->compareAllStandards($raw),
+         ]);
+     }
+ 
++    /**
++     * Hitung skor data scan yang sama di SEMUA standar sekaligus,
++     * untuk ditampilkan sebagai tabel perbandingan.
++     */
++    private function compareAllStandards(array $raw): array
++    {
++        return collect(ScoringService::allStandards())
++            ->map(function ($std) use ($raw) {
++                $result = ScoringService::calculate(
++                    download:   $raw['download']  ?? 0,
++                    upload:     $raw['upload']    ?? 0,
++                    ping:       $raw['ping']      ?? 0,
++                    signal:     $raw['signal']    ?? null,
++                    interface:  $raw['interface'] ?? 'WLAN',
++                    standarKey: $std['key'],
++                );
++
++                return [
++                    'key'      => $std['key'],
++                    'label'    => $std['label'],
++                    'score'    => $result['score'],
++                    'kategori' => $result['kategori'],
++                ];
++            })
++            ->sortByDesc('score')
++            ->values()
++            ->toArray();
++    }
++
+     public function scanApi(Request $request)
+     {
+         if ($request->filled('standar')) {
+diff --git a/app/Http/Controllers/SettingsController.php b/app/Http/Controllers/SettingsController.php
+new file mode 100644
+index 0000000..e71f47b
+--- /dev/null
++++ b/app/Http/Controllers/SettingsController.php
+@@ -0,0 +1,43 @@
++<?php
++
++namespace App\Http\Controllers;
++
++use App\Models\CustomScoringSetting;
++use Illuminate\Http\Request;
++
++class SettingsController extends Controller
++{
++    public function index()
++    {
++        $setting = CustomScoringSetting::current();
++
++        return view('settings', compact('setting'));
++    }
++
++    public function update(Request $request)
++    {
++        $validated = $request->validate([
++            'weight_download'    => 'required|numeric|min:0|max:1',
++            'weight_upload'      => 'required|numeric|min:0|max:1',
++            'weight_ping'        => 'required|numeric|min:0|max:1',
++            'weight_signal'      => 'required|numeric|min:0|max:1',
++            'threshold_download' => 'required|numeric|min:0.1',
++            'threshold_upload'   => 'required|numeric|min:0.1',
++            'threshold_ping'     => 'required|numeric|min:0.1',
++        ]);
++
++        $totalWeight = $validated['weight_download'] + $validated['weight_upload']
++            + $validated['weight_ping'] + $validated['weight_signal'];
++
++        // Total bobot harus 1.0 (toleransi pembulatan kecil)
++        if (abs($totalWeight - 1.0) > 0.01) {
++            return back()
++                ->withInput()
++                ->withErrors(['weight_download' => "Total bobot harus = 100% (saat ini: " . round($totalWeight * 100) . "%)"]);
++        }
++
++        CustomScoringSetting::current()->update($validated);
++
++        return back()->with('success', 'Bobot standar custom berhasil disimpan.');
++    }
++}
+diff --git a/app/Models/CustomScoringSetting.php b/app/Models/CustomScoringSetting.php
+new file mode 100644
+index 0000000..c26f6f3
+--- /dev/null
++++ b/app/Models/CustomScoringSetting.php
+@@ -0,0 +1,53 @@
++<?php
++
++namespace App\Models;
++
++use Illuminate\Database\Eloquent\Model;
++
++class CustomScoringSetting extends Model
++{
++    protected $fillable = [
++        'weight_download',
++        'weight_upload',
++        'weight_ping',
++        'weight_signal',
++        'threshold_download',
++        'threshold_upload',
++        'threshold_ping',
++    ];
++
++    /**
++     * Selalu ambil baris pertama (singleton). Kalau belum ada, buat default.
++     */
++    public static function current(): self
++    {
++        return self::first() ?? self::create([
++            'weight_download'    => 0.25,
++            'weight_upload'      => 0.25,
++            'weight_ping'        => 0.25,
++            'weight_signal'      => 0.25,
++            'threshold_download' => 50,
++            'threshold_upload'   => 20,
++            'threshold_ping'     => 150,
++        ]);
++    }
++
++    public function toScoringConfig(): array
++    {
++        return [
++            'label'     => 'Custom',
++            'deskripsi' => 'Bobot bebas ditentukan sendiri melalui halaman Pengaturan.',
++            'weights'   => [
++                'download' => $this->weight_download,
++                'upload'   => $this->weight_upload,
++                'ping'     => $this->weight_ping,
++                'signal'   => $this->weight_signal,
++            ],
++            'threshold' => [
++                'download' => $this->threshold_download,
++                'upload'   => $this->threshold_upload,
++                'ping'     => $this->threshold_ping,
++            ],
++        ];
++    }
++}
+diff --git a/app/Services/InsightService.php b/app/Services/InsightService.php
+new file mode 100644
+index 0000000..4f98d36
+--- /dev/null
++++ b/app/Services/InsightService.php
+@@ -0,0 +1,127 @@
++<?php
++
++namespace App\Services;
++
++use App\Models\Scan;
++use Illuminate\Support\Facades\DB;
++
++class InsightService
++{
++    /** Minimal jumlah sampel supaya insight dianggap valid (hindari noise) */
++    private const MIN_SAMPLE = 3;
++
++    /**
++     * Generate semua insight otomatis. Return array of:
++     * ['type' => 'warning'|'info'|'success', 'icon' => '...', 'text' => '...']
++     */
++    public static function generate(): array
++    {
++        $insights = [];
++
++        self::addJamRawan($insights);
++        self::addPerbandinganInterface($insights);
++        self::addTrenMingguan($insights);
++        self::addKoneksiTerburuk($insights);
++
++        return $insights;
++    }
++
++    /** Insight 1: jam dalam sehari dengan rata-rata skor terendah */
++    private static function addJamRawan(array &$insights): void
++    {
++        $rows = Scan::selectRaw("substr(jam, 1, 2) as hour, ROUND(AVG(score)) as avg_score, COUNT(*) as cnt")
++            ->groupBy('hour')
++            ->having('cnt', '>=', self::MIN_SAMPLE)
++            ->orderBy('avg_score', 'asc')
++            ->first();
++
++        if ($rows) {
++            $insights[] = [
++                'type' => $rows->avg_score < 60 ? 'warning' : 'info',
++                'icon' => 'bi-clock-history',
++                'text' => "Jam <strong>{$rows->hour}:00–" . (str_pad(((int)$rows->hour + 1) % 24, 2, '0', STR_PAD_LEFT) . ":00") . "</strong> punya rata-rata skor terendah (<strong>{$rows->avg_score}</strong>) dari {$rows->cnt} scan. Kemungkinan jam sibuk/banyak pengguna di jaringan.",
++            ];
++        }
++    }
++
++    /** Insight 2: perbandingan performa WLAN vs LAN */
++    private static function addPerbandinganInterface(array &$insights): void
++    {
++        $stats = Scan::selectRaw("interface, ROUND(AVG(score)) as avg_score, COUNT(*) as cnt")
++            ->whereNotNull('interface')
++            ->groupBy('interface')
++            ->having('cnt', '>=', self::MIN_SAMPLE)
++            ->get()
++            ->keyBy('interface');
++
++        if ($stats->has('WLAN') && $stats->has('LAN')) {
++            $wlan = $stats['WLAN'];
++            $lan  = $stats['LAN'];
++            $diff = abs($wlan->avg_score - $lan->avg_score);
++
++            if ($diff >= 10) {
++                $better = $wlan->avg_score > $lan->avg_score ? 'WLAN' : 'LAN';
++                $insights[] = [
++                    'type' => 'info',
++                    'icon' => 'bi-arrow-left-right',
++                    'text' => "Koneksi <strong>{$better}</strong> tercatat lebih stabil — WLAN rata-rata {$wlan->avg_score}, LAN rata-rata {$lan->avg_score} (selisih {$diff} poin).",
++                ];
++            }
++        }
++    }
++
++    /** Insight 3: tren skor minggu ini vs minggu lalu */
++    private static function addTrenMingguan(array &$insights): void
++    {
++        $now = now();
++
++        $minggIni = Scan::whereBetween('tanggal', [
++                $now->copy()->subDays(7)->format('Y-m-d'),
++                $now->format('Y-m-d'),
++            ])->avg('score');
++
++        $mingguLalu = Scan::whereBetween('tanggal', [
++                $now->copy()->subDays(14)->format('Y-m-d'),
++                $now->copy()->subDays(8)->format('Y-m-d'),
++            ])->avg('score');
++
++        if ($minggIni !== null && $mingguLalu !== null && $mingguLalu > 0) {
++            $delta = round((($minggIni - $mingguLalu) / $mingguLalu) * 100);
++
++            if (abs($delta) >= 5) {
++                $arah = $delta > 0 ? 'naik' : 'turun';
++                $type = $delta > 0 ? 'success' : 'warning';
++                $icon = $delta > 0 ? 'bi-graph-up-arrow' : 'bi-graph-down-arrow';
++                $insights[] = [
++                    'type' => $type,
++                    'icon' => $icon,
++                    'text' => "Rata-rata skor minggu ini <strong>{$arah} " . abs($delta) . "%</strong> dibanding minggu lalu (" . round($mingguLalu) . " → " . round($minggIni) . ").",
++                ];
++            }
++        }
++    }
++
++    /** Insight 4: SSID/koneksi dengan persentase kategori "Buruk" tertinggi */
++    private static function addKoneksiTerburuk(array &$insights): void
++    {
++        $rows = Scan::selectRaw("ssid, COUNT(*) as total, SUM(CASE WHEN kategori = 'Buruk' THEN 1 ELSE 0 END) as buruk_count")
++            ->whereNotNull('ssid')
++            ->groupBy('ssid')
++            ->having('total', '>=', self::MIN_SAMPLE)
++            ->get()
++            ->map(function ($r) {
++                $r->persen_buruk = round(($r->buruk_count / $r->total) * 100);
++                return $r;
++            })
++            ->sortByDesc('persen_buruk')
++            ->first();
++
++        if ($rows && $rows->persen_buruk >= 40) {
++            $insights[] = [
++                'type' => 'warning',
++                'icon' => 'bi-exclamation-triangle',
++                'text' => "Jaringan <strong>{$rows->ssid}</strong> berada di kategori \"Buruk\" pada <strong>{$rows->persen_buruk}%</strong> dari {$rows->total} scan. Pertimbangkan cek perangkat/posisi router.",
++            ];
++        }
++    }
++}
+diff --git a/app/Services/ScoringService.php b/app/Services/ScoringService.php
+index 7c52851..15d96b6 100644
+--- a/app/Services/ScoringService.php
++++ b/app/Services/ScoringService.php
+@@ -15,7 +15,20 @@ public static function activeKey(): string
+ 
+     public static function activeConfig(): array
+     {
+-        $key = self::activeKey();
++        return self::resolveConfig(self::activeKey());
++    }
++
++    /**
++     * Resolve config standar berdasarkan key.
++     * 'custom' diambil dari database (bisa diubah lewat halaman Pengaturan),
++     * standar lain diambil dari config/scoring.php (statis).
++     */
++    public static function resolveConfig(string $key): array
++    {
++        if ($key === 'custom') {
++            return \App\Models\CustomScoringSetting::current()->toScoringConfig();
++        }
++
+         return config("scoring.{$key}", config('scoring.polrestabes'));
+     }
+ 
+@@ -43,7 +56,7 @@ public static function calculate(
+         ?string $standarKey = null
+     ): array {
+         $key    = $standarKey ?? self::activeKey();
+-        $config = config("scoring.{$key}", config('scoring.polrestabes'));
++        $config = self::resolveConfig($key);
+ 
+         $w  = $config['weights'];
+         $th = $config['threshold'];
+diff --git a/database/migrations/2026_06_25_000001_create_custom_scoring_settings_table.php b/database/migrations/2026_06_25_000001_create_custom_scoring_settings_table.php
+new file mode 100644
+index 0000000..82c6b02
+--- /dev/null
++++ b/database/migrations/2026_06_25_000001_create_custom_scoring_settings_table.php
+@@ -0,0 +1,45 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\Schema;
++
++return new class extends Migration
++{
++    public function up(): void
++    {
++        Schema::create('custom_scoring_settings', function (Blueprint $table) {
++            $table->id();
++            // Bobot (harus total = 1.0)
++            $table->float('weight_download')->default(0.25);
++            $table->float('weight_upload')->default(0.25);
++            $table->float('weight_ping')->default(0.25);
++            $table->float('weight_signal')->default(0.25);
++            // Threshold "nilai sempurna" per metrik
++            $table->float('threshold_download')->default(50);
++            $table->float('threshold_upload')->default(20);
++            $table->float('threshold_ping')->default(150);
++            $table->timestamps();
++        });
++
++        // Seed 1 baris default supaya selalu ada row aktif (singleton pattern)
++        Schema::table('custom_scoring_settings', function () {
++            \Illuminate\Support\Facades\DB::table('custom_scoring_settings')->insert([
++                'weight_download'   => 0.25,
++                'weight_upload'     => 0.25,
++                'weight_ping'       => 0.25,
++                'weight_signal'     => 0.25,
++                'threshold_download'=> 50,
++                'threshold_upload'  => 20,
++                'threshold_ping'    => 150,
++                'created_at'        => now(),
++                'updated_at'        => now(),
++            ]);
++        });
++    }
++
++    public function down(): void
++    {
++        Schema::dropIfExists('custom_scoring_settings');
++    }
++};
+diff --git a/resources/views/dashboard.blade.php b/resources/views/dashboard.blade.php
+index aafaa68..df53f42 100644
+--- a/resources/views/dashboard.blade.php
++++ b/resources/views/dashboard.blade.php
+@@ -46,6 +46,27 @@
+     </div>
+     @endif
+ 
++    {{-- ===== INSIGHT OTOMATIS ===== --}}
++    @if(!empty($insights))
++    <div class="card border-0 shadow-sm mb-4">
++        <div class="card-header bg-white border-0 pb-0">
++            <h6 class="fw-semibold mb-0"><i class="bi bi-lightbulb text-warning me-1"></i>Insight Otomatis</h6>
++        </div>
++        <div class="card-body pt-2">
++            <div class="row g-2">
++                @foreach($insights as $insight)
++                <div class="col-12 col-md-6">
++                    <div class="alert alert-{{ $insight['type'] }} d-flex align-items-start gap-2 mb-0 py-2 small">
++                        <i class="bi {{ $insight['icon'] }} mt-1"></i>
++                        <span>{!! $insight['text'] !!}</span>
++                    </div>
++                </div>
++                @endforeach
++            </div>
++        </div>
++    </div>
++    @endif
++
+     {{-- ===== STAT CARDS ===== --}}
+     <div class="row g-3 mb-4">
+ 
+diff --git a/resources/views/layouts/app.blade.php b/resources/views/layouts/app.blade.php
+index fc04c28..10c85a4 100644
+--- a/resources/views/layouts/app.blade.php
++++ b/resources/views/layouts/app.blade.php
+@@ -28,7 +28,7 @@
+     </a>
+ </li>
+                       <li class="nav-item w-100">
+-    <a href="#" id="scanMenu" class="nav-link text-white">
++    <a href="{{ route('scan.manual') }}" class="nav-link text-white {{ request()->routeIs('scan.manual*') ? 'active bg-primary' : '' }}">
+         <i class="bi bi-wifi me-2"></i> <span class="d-none d-sm-inline">Scan</span>
+     </a>
+ </li>
+@@ -39,6 +39,9 @@
+ </li>
+                     </ul>
+                     <hr class="text-white w-100 d-none d-sm-block">
++                    <a href="{{ route('settings') }}" class="nav-link text-white w-100 {{ request()->routeIs('settings') ? 'active bg-primary' : '' }}">
++                        <i class="bi bi-gear me-2"></i> <span class="d-none d-sm-inline">Pengaturan</span>
++                    </a>
+                     <div class="dropdown pb-4 mt-auto">
+                         <span class="text-white-50 small d-none d-sm-inline">v1.0 - Magang</span>
+                     </div>
+@@ -52,33 +55,7 @@
+         </div>
+     </div>
+ 
+-    <!-- Modal Scan -->
+-<div class="modal fade" id="scanModal" tabindex="-1" aria-hidden="true">
+-    <div class="modal-dialog modal-lg">
+-        <div class="modal-content">
+-            <div class="modal-header">
+-                <h5 class="modal-title"><i class="bi bi-wifi"></i> Proses Scan</h5>
+-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+-            </div>
+-            <div class="modal-body" id="scanModalBody">
+-                <div id="scanProgress">
+-                    <p>Sedang melakukan scan jaringan...</p>
+-                    <div class="progress">
+-                        <div id="scanProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
+-                    </div>
+-                </div>
+-                <div id="scanResult" style="display:none;">
+-                    <!-- Hasil scan akan ditampilkan di sini -->
+-                </div>
+-            </div>
+-            <div class="modal-footer">
+-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+-            </div>
+-        </div>
+-    </div>
+-</div> 
+-
+-<!-- Modal Export -->
++    <!-- Modal Export -->
+ <div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
+     <div class="modal-dialog">
+         <div class="modal-content">
+@@ -126,15 +103,6 @@
+ 
+     <script>
+ document.addEventListener('DOMContentLoaded', function() {
+-    // --- Menu Scan ---
+-    const scanMenu = document.getElementById('scanMenu');
+-    if (scanMenu) {
+-        scanMenu.addEventListener('click', function(e) {
+-            e.preventDefault();
+-            startScan();
+-        });
+-    }
+-
+     // --- Menu Export ---
+     const exportMenu = document.getElementById('exportMenu');
+     if (exportMenu) {
+@@ -161,76 +129,6 @@
+         });
+     }
+ });
+-
+-// Fungsi untuk menjalankan scan
+-function startScan() {
+-    const modal = new bootstrap.Modal(document.getElementById('scanModal'));
+-    const progressBar = document.getElementById('scanProgressBar');
+-    const progressDiv = document.getElementById('scanProgress');
+-    const resultDiv = document.getElementById('scanResult');
+-
+-    // Reset tampilan
+-    progressDiv.style.display = 'block';
+-    resultDiv.style.display = 'none';
+-    progressBar.style.width = '0%';
+-    progressBar.textContent = '0%';
+-
+-    modal.show();
+-
+-    // Simulasi progress (0-95%) sambil menunggu response
+-    let progress = 0;
+-    const interval = setInterval(() => {
+-        progress += Math.floor(Math.random() * 10) + 1;
+-        if (progress > 95) progress = 95;
+-        progressBar.style.width = progress + '%';
+-        progressBar.textContent = progress + '%';
+-    }, 300);
+-
+-    // Panggil API scan
+-    fetch('/api/scan-manual')
+-        .then(response => {
+-            if (!response.ok) {
+-                return response.json().then(err => { throw new Error(err.error || 'Gagal scan'); });
+-            }
+-            return response.json();
+-        })
+-        .then(data => {
+-            clearInterval(interval);
+-            progressBar.style.width = '100%';
+-            progressBar.textContent = '100%';
+-
+-            setTimeout(() => {
+-                progressDiv.style.display = 'none';
+-                resultDiv.style.display = 'block';
+-                resultDiv.innerHTML = renderResult(data);
+-            }, 500);
+-        })
+-        .catch(error => {
+-            clearInterval(interval);
+-            progressDiv.style.display = 'none';
+-            resultDiv.style.display = 'block';
+-            resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+-        });
+-}
+-
+-// Fungsi untuk menampilkan hasil scan
+-function renderResult(data) {
+-    if (data.error) {
+-        return `<div class="alert alert-danger">${data.error}</div>`;
+-    }
+-    let html = `<table class="table table-bordered">
+-        <tr><th>SSID</th><td>${data.ssid || '-'}</td></tr>
+-        <tr><th>Tanggal</th><td>${data.tanggal || '-'}</td></tr>
+-        <tr><th>Jam</th><td>${data.jam || '-'}</td></tr>
+-        <tr><th>Download</th><td>${data.download || 0} Mbps</td></tr>
+-        <tr><th>Upload</th><td>${data.upload || 0} Mbps</td></tr>
+-        <tr><th>Ping</th><td>${data.ping || 0} ms</td></tr>
+-        <tr><th>Signal</th><td>${data.signal || 0} dBm</td></tr>
+-        <tr><th>Score</th><td><span class="badge bg-primary">${data.score || 0}</span></td></tr>
+-        <tr><th>Kategori</th><td>${data.kategori || '-'}</td></tr>
+-    </table>`;
+-    return html;
+-}
+ </script>
+ </body>
+ </html>
+\ No newline at end of file
+diff --git a/resources/views/scan-preview.blade.php b/resources/views/scan-preview.blade.php
+index 54fa4f8..b71221b 100644
+--- a/resources/views/scan-preview.blade.php
++++ b/resources/views/scan-preview.blade.php
+@@ -21,25 +21,32 @@
+ {{-- ===== PILIH STANDAR ===== --}}
+ <div class="card border-0 shadow-sm mb-4">
+     <div class="card-body py-2">
+-        <form method="GET" action="{{ route('scan.manual') }}" class="d-flex align-items-center gap-3 flex-wrap">
+-            <label class="form-label mb-0 fw-semibold text-nowrap">
+-                <i class="bi bi-sliders me-1 text-primary"></i>Standar Penilaian:
+-            </label>
+-            <select name="standar" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+-                @foreach($standards as $std)
+-                    <option value="{{ $std['key'] }}" {{ $activeKey === $std['key'] ? 'selected' : '' }}>
+-                        {{ $std['label'] }}
+-                    </option>
+-                @endforeach
+-            </select>
+-            <small class="text-muted fst-italic">
+-                {{ collect($standards)->firstWhere('key', $activeKey)['deskripsi'] ?? '' }}
+-            </small>
+-            {{-- Simpan state supaya scan ulang pakai standar yang sama --}}
+-            <button type="submit" class="btn btn-primary btn-sm ms-auto">
+-                <i class="bi bi-arrow-repeat me-1"></i>Scan Ulang
+-            </button>
+-        </form>
++        <div class="d-flex align-items-center gap-3 flex-wrap">
++            {{-- Ganti standar: TIDAK scan ulang, cuma hitung ulang skor --}}
++            <form method="GET" action="{{ route('scan.manual.standar') }}" class="d-flex align-items-center gap-3 flex-wrap mb-0">
++                <label class="form-label mb-0 fw-semibold text-nowrap">
++                    <i class="bi bi-sliders me-1 text-primary"></i>Standar Penilaian:
++                </label>
++                <select name="standar" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
++                    @foreach($standards as $std)
++                        <option value="{{ $std['key'] }}" {{ $activeKey === $std['key'] ? 'selected' : '' }}>
++                            {{ $std['label'] }}
++                        </option>
++                    @endforeach
++                </select>
++                <small class="text-muted fst-italic">
++                    {{ collect($standards)->firstWhere('key', $activeKey)['deskripsi'] ?? '' }}
++                </small>
++            </form>
++
++            {{-- Scan ulang: jalankan agent.py lagi (±10-60 detik) --}}
++            <form method="GET" action="{{ route('scan.manual') }}" class="mb-0 ms-auto">
++                <input type="hidden" name="standar" value="{{ $activeKey }}">
++                <button type="submit" class="btn btn-primary btn-sm">
++                    <i class="bi bi-arrow-repeat me-1"></i>Scan Ulang
++                </button>
++            </form>
++        </div>
+     </div>
+ </div>
+ 
+@@ -139,6 +146,33 @@
+ 
+     {{-- ===== INFO PANEL ===== --}}
+     <div class="col-md-5">
++        <div class="card border-0 shadow-sm mb-3">
++            <div class="card-body">
++                <h6 class="fw-semibold mb-2">
++                    <i class="bi bi-bar-chart-steps text-primary me-1"></i>Perbandingan Antar Standar
++                </h6>
++                <p class="small text-muted mb-2">Skor data scan ini kalau dinilai pakai standar lain:</p>
++                <table class="table table-sm mb-0">
++                    @foreach($comparisons as $cmp)
++                    <tr class="{{ $cmp['key'] === $activeKey ? 'table-primary' : '' }}">
++                        <td class="small">
++                            {{ $cmp['label'] }}
++                            @if($cmp['key'] === $activeKey)
++                                <i class="bi bi-check-circle-fill text-primary ms-1" title="Standar aktif"></i>
++                            @endif
++                        </td>
++                        <td class="text-end">
++                            <span class="badge bg-{{ $cmp['score'] >= 75 ? 'success' : ($cmp['score'] >= 60 ? 'warning' : 'danger') }}">
++                                {{ $cmp['score'] }}
++                            </span>
++                        </td>
++                        <td class="small text-muted text-end" style="width: 90px;">{{ $cmp['kategori'] }}</td>
++                    </tr>
++                    @endforeach
++                </table>
++            </div>
++        </div>
++
+         <div class="card border-0 shadow-sm mb-3">
+             <div class="card-body">
+                 <h6 class="fw-semibold mb-2">
+diff --git a/resources/views/settings.blade.php b/resources/views/settings.blade.php
+new file mode 100644
+index 0000000..b805454
+--- /dev/null
++++ b/resources/views/settings.blade.php
+@@ -0,0 +1,142 @@
++@extends('layouts.app')
++
++@section('title', 'Pengaturan')
++
++@section('content')
++<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
++    <h1 class="h2 mb-0"><i class="bi bi-sliders me-2"></i>Pengaturan Standar Custom</h1>
++</div>
++
++@if(session('success'))
++    <div class="alert alert-success">{{ session('success') }}</div>
++@endif
++
++<div class="row g-4">
++    <div class="col-md-7">
++        <div class="card border-0 shadow-sm">
++            <div class="card-header bg-dark text-white">
++                <i class="bi bi-pencil-square me-2"></i>Atur Bobot &amp; Threshold
++            </div>
++            <div class="card-body">
++                <form method="POST" action="{{ route('settings.update') }}">
++                    @csrf
++
++                    <h6 class="fw-semibold mb-3">Bobot Penilaian <small class="text-muted">(total harus 100%)</small></h6>
++
++                    @if($errors->any())
++                        <div class="alert alert-danger small">
++                            {{ $errors->first() }}
++                        </div>
++                    @endif
++
++                    <div class="row g-3 mb-4">
++                        <div class="col-6">
++                            <label class="form-label">📥 Download (%)</label>
++                            <input type="number" step="1" min="0" max="100" name="weight_download_pct"
++                                   id="weight_download_pct"
++                                   class="form-control"
++                                   value="{{ old('weight_download', $setting->weight_download) * 100 }}">
++                            <input type="hidden" name="weight_download" id="weight_download" value="{{ old('weight_download', $setting->weight_download) }}">
++                        </div>
++                        <div class="col-6">
++                            <label class="form-label">📤 Upload (%)</label>
++                            <input type="number" step="1" min="0" max="100" name="weight_upload_pct"
++                                   id="weight_upload_pct"
++                                   class="form-control"
++                                   value="{{ old('weight_upload', $setting->weight_upload) * 100 }}">
++                            <input type="hidden" name="weight_upload" id="weight_upload" value="{{ old('weight_upload', $setting->weight_upload) }}">
++                        </div>
++                        <div class="col-6">
++                            <label class="form-label">⚡ Ping (%)</label>
++                            <input type="number" step="1" min="0" max="100" name="weight_ping_pct"
++                                   id="weight_ping_pct"
++                                   class="form-control"
++                                   value="{{ old('weight_ping', $setting->weight_ping) * 100 }}">
++                            <input type="hidden" name="weight_ping" id="weight_ping" value="{{ old('weight_ping', $setting->weight_ping) }}">
++                        </div>
++                        <div class="col-6">
++                            <label class="form-label">📶 Signal (%)</label>
++                            <input type="number" step="1" min="0" max="100" name="weight_signal_pct"
++                                   id="weight_signal_pct"
++                                   class="form-control"
++                                   value="{{ old('weight_signal', $setting->weight_signal) * 100 }}">
++                            <input type="hidden" name="weight_signal" id="weight_signal" value="{{ old('weight_signal', $setting->weight_signal) }}">
++                        </div>
++                    </div>
++
++                    <div class="mb-4">
++                        <span class="small text-muted">Total saat ini: </span>
++                        <span id="totalWeightDisplay" class="fw-bold">100%</span>
++                    </div>
++
++                    <hr>
++
++                    <h6 class="fw-semibold mb-3">Threshold <small class="text-muted">(nilai dianggap "sempurna" = skor 100 di metrik itu)</small></h6>
++                    <div class="row g-3 mb-3">
++                        <div class="col-4">
++                            <label class="form-label">Download (Mbps)</label>
++                            <input type="number" step="0.1" min="0.1" name="threshold_download" class="form-control"
++                                   value="{{ old('threshold_download', $setting->threshold_download) }}">
++                        </div>
++                        <div class="col-4">
++                            <label class="form-label">Upload (Mbps)</label>
++                            <input type="number" step="0.1" min="0.1" name="threshold_upload" class="form-control"
++                                   value="{{ old('threshold_upload', $setting->threshold_upload) }}">
++                        </div>
++                        <div class="col-4">
++                            <label class="form-label">Ping (ms)</label>
++                            <input type="number" step="0.1" min="0.1" name="threshold_ping" class="form-control"
++                                   value="{{ old('threshold_ping', $setting->threshold_ping) }}">
++                        </div>
++                    </div>
++
++                    <button type="submit" class="btn btn-primary">
++                        <i class="bi bi-check-lg me-1"></i>Simpan Pengaturan
++                    </button>
++                </form>
++            </div>
++        </div>
++    </div>
++
++    <div class="col-md-5">
++        <div class="card border-0 shadow-sm">
++            <div class="card-body">
++                <h6 class="fw-semibold mb-2"><i class="bi bi-info-circle text-info me-1"></i>Cara Pakai</h6>
++                <ul class="small text-muted ps-3">
++                    <li class="mb-2">Bobot keempat metrik (Download, Upload, Ping, Signal) harus <strong>total 100%</strong>.</li>
++                    <li class="mb-2">Threshold adalah nilai yang dianggap "sempurna" (skor 100) untuk metrik itu. Misal threshold Download = 50 Mbps, artinya kecepatan 50 Mbps atau lebih dianggap skor download maksimal.</li>
++                    <li class="mb-2">Untuk koneksi <strong>LAN</strong> (tanpa sinyal WiFi), bobot Signal otomatis dipindahkan ke Ping saat menghitung skor.</li>
++                    <li>Setelah disimpan, pilih standar <strong>"Custom"</strong> di halaman Scan Manual untuk memakai bobot ini.</li>
++                </ul>
++            </div>
++        </div>
++    </div>
++</div>
++@endsection
++
++@push('scripts')
++<script>
++// Sinkronkan input persen (tampilan) <-> input desimal (dikirim ke server) + live total
++document.addEventListener('DOMContentLoaded', function () {
++    const fields = ['download', 'upload', 'ping', 'signal'];
++    const totalDisplay = document.getElementById('totalWeightDisplay');
++
++    function recalcTotal() {
++        let total = 0;
++        fields.forEach(f => {
++            const pct = parseFloat(document.getElementById('weight_' + f + '_pct').value) || 0;
++            document.getElementById('weight_' + f).value = (pct / 100).toFixed(4);
++            total += pct;
++        });
++        totalDisplay.textContent = total + '%';
++        totalDisplay.className = (Math.abs(total - 100) < 1) ? 'fw-bold text-success' : 'fw-bold text-danger';
++    }
++
++    fields.forEach(f => {
++        document.getElementById('weight_' + f + '_pct').addEventListener('input', recalcTotal);
++    });
++
++    recalcTotal();
++});
++</script>
++@endpush
+diff --git a/routes/web.php b/routes/web.php
+index a704c5a..647ad00 100644
+--- a/routes/web.php
++++ b/routes/web.php
+@@ -3,8 +3,12 @@
+ use App\Http\Controllers\DashboardController;
+ use App\Http\Controllers\ManualScanController;
+ use App\Http\Controllers\HistoryController;
++use App\Http\Controllers\SettingsController;
+ 
+ Route::get('/scan-manual', [ManualScanController::class, 'scan'])->name('scan.manual');
++Route::get('/scan-manual/standar', [ManualScanController::class, 'setStandar'])->name('scan.manual.standar');
+ Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+ Route::get('/history', [HistoryController::class, 'index'])->name('history');
+-Route::get('/export-excel', [HistoryController::class, 'export'])->name('export.excel');
+\ No newline at end of file
++Route::get('/export-excel', [HistoryController::class, 'export'])->name('export.excel');
++Route::get('/pengaturan', [SettingsController::class, 'index'])->name('settings');
++Route::post('/pengaturan', [SettingsController::class, 'update'])->name('settings.update');
+\ No newline at end of file
