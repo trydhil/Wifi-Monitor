@@ -1,7 +1,7 @@
 import time
 import speedtest
 
-def run_speedtest(max_retries=2, retry_delay=5):
+def run_speedtest(max_retries=3, retry_delay=8):
     """
     Jalankan speedtest menggunakan library speedtest-cli.
     Pakai secure=True (HTTPS) karena banyak jaringan kampus/firewall
@@ -24,7 +24,7 @@ def run_speedtest(max_retries=2, retry_delay=5):
             last_error = e
             print(f"[ERROR] Speedtest gagal (percobaan {attempt}/{max_retries}): {e}")
             if attempt < max_retries:
-                time.sleep(retry_delay)
+                time.sleep(retry_delay * attempt)  # 8s, 16s, ...
 
     print(f"[ERROR] Speedtest gagal setelah {max_retries} percobaan: {last_error}")
     return None

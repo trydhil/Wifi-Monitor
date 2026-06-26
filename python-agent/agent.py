@@ -67,10 +67,16 @@ def main():
 
     speedtest_result = run_speedtest()
     if not speedtest_result:
-        print("[ERROR] Speedtest gagal, pakai data parsial")
-        download, upload, ping = 0, 0, 0
-    else:
-        download, upload, ping = speedtest_result
+        print("[ERROR] Speedtest gagal total setelah beberapa percobaan.")
+        if args.save:
+            # JANGAN simpan data palsu (0,0,0) ke database — itu menyesatkan
+            # statistik & insight (seolah-olah WiFi buruk, padahal cuma gagal ukur).
+            print("[SKIP] Tidak ada data valid untuk disimpan. Scan jam ini dilewati.")
+        else:
+            print("[INFO] Mode preview — tidak ada data untuk ditampilkan.")
+        return
+
+    download, upload, ping = speedtest_result
 
     score    = calculate_score(download, upload, ping, signal, interface)
     kategori = get_category(score)

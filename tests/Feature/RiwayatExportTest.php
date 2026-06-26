@@ -55,9 +55,19 @@ class RiwayatExportTest extends TestCase
     #[\PHPUnit\Framework\Attributes\Test]
     public function filter_kategori_mengembalikan_data_yang_sesuai()
     {
-        Scan::factory()->create(['kategori' => 'Baik']);
-        Scan::factory()->create(['kategori' => 'Buruk']);
-        Scan::factory()->create(['kategori' => 'Baik']);
+        // PENTING: kolom 'kategori' dihitung ULANG oleh ScoringService berdasarkan
+        // standar aktif (default: polrestabes), jadi tidak bisa cuma set string
+        // 'kategori' di factory — harus pakai raw metrics yang beneran menghasilkan
+        // kategori itu di bawah formula polrestabes (download=20,upload=10,ping=100).
+        Scan::factory()->create([ // -> skor ~88 (Baik)
+            'interface' => 'WLAN', 'download' => 20, 'upload' => 10, 'ping' => 10, 'signal' => -50,
+        ]);
+        Scan::factory()->create([ // -> skor ~11 (Buruk)
+            'interface' => 'WLAN', 'download' => 1, 'upload' => 0.5, 'ping' => 200, 'signal' => -90,
+        ]);
+        Scan::factory()->create([ // -> skor ~88 (Baik)
+            'interface' => 'WLAN', 'download' => 20, 'upload' => 10, 'ping' => 10, 'signal' => -50,
+        ]);
 
         $response = $this->get(route('history', ['kategori' => 'Baik']));
         $response->assertStatus(200);
@@ -83,8 +93,8 @@ class RiwayatExportTest extends TestCase
         ]);
 
         $response = $this->get(route('history', [
-            'dari'   => now()->subDays(1)->toDateString(),
-            'sampai' => now()->toDateString(),
+            'tanggal_awal'  => now()->subDays(1)->toDateString(),
+            'tanggal_akhir' => now()->toDateString(),
         ]));
 
         $response->assertStatus(200);

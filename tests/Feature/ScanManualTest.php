@@ -51,11 +51,15 @@ class ScanManualTest extends TestCase
         $response = $this->get(route('scan.manual'));
 
         if ($response->status() === 200) {
-            // Cek salah satu nama variabel yang mungkin dipakai di controller
-            $hasResult = $response->viewData('result') !== null
-                      || $response->viewData('data') !== null
-                      || $response->viewData('scan') !== null;
-            $this->assertTrue($hasResult, 'View tidak punya variabel hasil scan (result/data/scan)');
+            // Controller pakai key 'scan' (lihat ManualScanController::scan()).
+            // Pakai array_key_exists, bukan akses langsung viewData('xxx'),
+            // karena viewData() akses array tanpa cek exist dulu -> error
+            // "Undefined array key" kalau key itu tidak ada di data view.
+            $viewData = $response->original->getData();
+            $hasResult = array_key_exists('scan', $viewData)
+                      || array_key_exists('result', $viewData)
+                      || array_key_exists('data', $viewData);
+            $this->assertTrue($hasResult, 'View tidak punya variabel hasil scan (scan/result/data)');
         } else {
             // Redirect = ok, tidak crash
             $this->assertTrue(true);

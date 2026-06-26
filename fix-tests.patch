@@ -1,0 +1,82 @@
+diff --git a/tests/Feature/ExampleTest.php b/tests/Feature/ExampleTest.php
+index 8364a84..22ef0c5 100644
+--- a/tests/Feature/ExampleTest.php
++++ b/tests/Feature/ExampleTest.php
+@@ -2,11 +2,13 @@
+ 
+ namespace Tests\Feature;
+ 
+-// use Illuminate\Foundation\Testing\RefreshDatabase;
++use Illuminate\Foundation\Testing\RefreshDatabase;
+ use Tests\TestCase;
+ 
+ class ExampleTest extends TestCase
+ {
++    use RefreshDatabase;
++
+     /**
+      * A basic test example.
+      */
+diff --git a/tests/Feature/RiwayatExportTest.php b/tests/Feature/RiwayatExportTest.php
+index 47c8406..a5d2547 100644
+--- a/tests/Feature/RiwayatExportTest.php
++++ b/tests/Feature/RiwayatExportTest.php
+@@ -55,9 +55,19 @@ public function filter_ssid_mengembalikan_data_yang_sesuai()
+     #[\PHPUnit\Framework\Attributes\Test]
+     public function filter_kategori_mengembalikan_data_yang_sesuai()
+     {
+-        Scan::factory()->create(['kategori' => 'Baik']);
+-        Scan::factory()->create(['kategori' => 'Buruk']);
+-        Scan::factory()->create(['kategori' => 'Baik']);
++        // PENTING: kolom 'kategori' dihitung ULANG oleh ScoringService berdasarkan
++        // standar aktif (default: polrestabes), jadi tidak bisa cuma set string
++        // 'kategori' di factory — harus pakai raw metrics yang beneran menghasilkan
++        // kategori itu di bawah formula polrestabes (download=20,upload=10,ping=100).
++        Scan::factory()->create([ // -> skor ~88 (Baik)
++            'interface' => 'WLAN', 'download' => 20, 'upload' => 10, 'ping' => 10, 'signal' => -50,
++        ]);
++        Scan::factory()->create([ // -> skor ~11 (Buruk)
++            'interface' => 'WLAN', 'download' => 1, 'upload' => 0.5, 'ping' => 200, 'signal' => -90,
++        ]);
++        Scan::factory()->create([ // -> skor ~88 (Baik)
++            'interface' => 'WLAN', 'download' => 20, 'upload' => 10, 'ping' => 10, 'signal' => -50,
++        ]);
+ 
+         $response = $this->get(route('history', ['kategori' => 'Baik']));
+         $response->assertStatus(200);
+@@ -83,8 +93,8 @@ public function filter_tanggal_bekerja_dengan_benar()
+         ]);
+ 
+         $response = $this->get(route('history', [
+-            'dari'   => now()->subDays(1)->toDateString(),
+-            'sampai' => now()->toDateString(),
++            'tanggal_awal'  => now()->subDays(1)->toDateString(),
++            'tanggal_akhir' => now()->toDateString(),
+         ]));
+ 
+         $response->assertStatus(200);
+diff --git a/tests/Feature/ScanManualTest.php b/tests/Feature/ScanManualTest.php
+index 45af3aa..4a1b5d2 100644
+--- a/tests/Feature/ScanManualTest.php
++++ b/tests/Feature/ScanManualTest.php
+@@ -51,11 +51,15 @@ public function scan_manual_menampilkan_hasil_ke_view()
+         $response = $this->get(route('scan.manual'));
+ 
+         if ($response->status() === 200) {
+-            // Cek salah satu nama variabel yang mungkin dipakai di controller
+-            $hasResult = $response->viewData('result') !== null
+-                      || $response->viewData('data') !== null
+-                      || $response->viewData('scan') !== null;
+-            $this->assertTrue($hasResult, 'View tidak punya variabel hasil scan (result/data/scan)');
++            // Controller pakai key 'scan' (lihat ManualScanController::scan()).
++            // Pakai array_key_exists, bukan akses langsung viewData('xxx'),
++            // karena viewData() akses array tanpa cek exist dulu -> error
++            // "Undefined array key" kalau key itu tidak ada di data view.
++            $viewData = $response->original->getData();
++            $hasResult = array_key_exists('scan', $viewData)
++                      || array_key_exists('result', $viewData)
++                      || array_key_exists('data', $viewData);
++            $this->assertTrue($hasResult, 'View tidak punya variabel hasil scan (scan/result/data)');
+         } else {
+             // Redirect = ok, tidak crash
+             $this->assertTrue(true);
