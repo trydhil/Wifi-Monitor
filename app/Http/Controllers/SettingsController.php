@@ -11,7 +11,17 @@ class SettingsController extends Controller
     public function index()
     {
         $setting = CustomScoringSetting::current();
-        return view('settings', compact('setting'));
+
+        $exportSettings = [
+            'format'  => 'xlsx',
+            'prefix'  => 'NETRA_SCAN_',
+            'columns' => ['tanggal','jam','interface','ssid','download','upload','ping','signal','score','kategori'],
+        ];
+        if (file_exists(storage_path('app/export_settings.json'))) {
+            $exportSettings = array_merge($exportSettings, json_decode(file_get_contents(storage_path('app/export_settings.json')), true) ?? []);
+        }
+
+        return view('settings', compact('setting', 'exportSettings'));
     }
 
     public function update(Request $request)
@@ -42,6 +52,14 @@ class SettingsController extends Controller
         if ($request->filled('new_password')) {
             $user->update(['password' => Hash::make($request->new_password)]);
         }
+
+        // Save export settings
+        $exportSettings = [
+            'format'  => $request->input('export_format', 'xlsx'),
+            'prefix'  => $request->input('export_prefix', 'NETRA_SCAN_'),
+            'columns' => $request->input('export_columns', ['tanggal','jam','interface','ssid','download','upload','ping','signal','score','kategori']),
+        ];
+        file_put_contents(storage_path('app/export_settings.json'), json_encode($exportSettings));
 
         // Bobot sum validation
         $total = $validated['weight_download'] + $validated['weight_upload']

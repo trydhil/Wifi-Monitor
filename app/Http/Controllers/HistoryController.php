@@ -138,7 +138,66 @@ class HistoryController extends Controller
         if ($request->filled('standar')) {
             $request->session()->put('scoring_standar', $request->standar);
         }
-        $namaFile = 'riwayat-scan-' . now()->format('Y-m-d_His') . '.xlsx';
-        return Excel::download(new ScansExport($request), $namaFile);
+
+        $exportSettings = [
+            'format'  => 'xlsx',
+            'prefix'  => 'NETRA_SCAN_',
+            'columns' => ['tanggal','jam','interface','ssid','download','upload','ping','signal','score','kategori'],
+        ];
+        if (file_exists(storage_path('app/export_settings.json'))) {
+            $exportSettings = array_merge($exportSettings, json_decode(file_get_contents(storage_path('app/export_settings.json')), true) ?? []);
+        }
+
+        // Determine format from request query param or settings default
+        $format = strtolower($request->input('format', $exportSettings['format']));
+        $prefix = $exportSettings['prefix'];
+        $namaFile = $prefix . now()->format('Y-m-d_His') . '.' . $format;
+
+        if ($format === 'json') {
+            $export = new \App\Exports\ScansExport($request);
+            $query = $export->query();
+            $scans = $query->get();
+
+            $jsonData = [];
+            foreach ($scans as $row) {
+                $scored = \App\Services\ScoringService::calculate(
+                    download:   $row->download  ?? 0,
+                    upload:     $row->upload    ?? 0,
+                    ping:       $row->ping      ?? 0,
+                    signal:     $row->signal    ?? null,
+                    interface:  $row->interface ?? 'WLAN',
+                    standarKey: \App\Services\ScoringService::activeKey(),
+                );
+
+                $rowMap = [];
+                foreach ($exportSettings['columns'] as $col) {
+                    $colLower = strtolower($col);
+                    switch ($colLower) {
+                        case 'tanggal':   $rowMap['tanggal'] = $row->tanggal; break;
+                        case 'jam':       $rowMap['jam'] = $row->jam; break;
+                        case 'interface': $rowMap['interface'] = strtoupper($row->interface ?? 'WLAN'); break;
+                        case 'ssid':      $rowMap['ssid'] = $row->ssid ?? 'Ethernet'; break;
+                        case 'download':  $rowMap['download'] = $row->download ?? 0; break;
+                        case 'upload':    $rowMap['upload'] = $row->upload ?? 0; break;
+                        case 'ping':      $rowMap['ping'] = $row->ping ?? 0; break;
+                        case 'signal':    $rowMap['signal'] = $row->signal ?? '-'; break;
+                        case 'score':     $rowMap['score'] = $scored['score']; break;
+                        case 'kategori':  $rowMap['kategori'] = $scored['kategori']; break;
+                    }
+                }
+                $rowMap['standar_penilaian'] = \App\Services\ScoringService::activeLabel();
+                $jsonData[] = $rowMap;
+            }
+
+            return response()->json($jsonData, 200, [
+                'Content-Disposition' => 'attachment; filename="' . $namaFile . '"',
+            ]);
+        }
+
+        if ($format === 'csv') {
+            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ScansExport($request), $namaFile, \Maatwebsite\Excel\Excel::CSV);
+        }
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ScansExport($request), $namaFile, \Maatwebsite\Excel\Excel::XLSX);
     }
 }

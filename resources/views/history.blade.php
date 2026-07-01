@@ -22,14 +22,14 @@
             <span class="material-symbols-outlined text-[18px]">download</span> Export <span class="material-symbols-outlined text-[16px] transition-transform group-open:rotate-180">expand_more</span>
         </summary>
         <div class="absolute right-0 mt-2 w-48 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-lg py-2 z-50">
-            <a class="flex items-center gap-2 px-4 py-2 hover:bg-surface-container-low text-xs text-on-surface" href="{{ route('export.excel', array_merge(request()->query(),['standar'=>$activeKey])) }}">
+            <a class="flex items-center gap-2 px-4 py-2 hover:bg-surface-container-low text-xs text-on-surface" href="{{ route('export.excel', array_merge(request()->query(),['standar'=>$activeKey, 'format'=>'xlsx'])) }}">
                 <span class="material-symbols-outlined text-[16px] text-green-600">table_view</span> Excel (.xlsx)
             </a>
-            <a class="flex items-center gap-2 px-4 py-2 hover:bg-surface-container-low text-xs text-on-surface" href="{{ route('export.excel', array_merge(request()->query(),['standar'=>$activeKey])) }}">
+            <a class="flex items-center gap-2 px-4 py-2 hover:bg-surface-container-low text-xs text-on-surface" href="{{ route('export.excel', array_merge(request()->query(),['standar'=>$activeKey, 'format'=>'csv'])) }}">
                 <span class="material-symbols-outlined text-[16px] text-slate-500">csv</span> CSV (.csv)
             </a>
-            <a class="flex items-center gap-2 px-4 py-2 hover:bg-surface-container-low text-xs text-on-surface" href="{{ route('export.excel', array_merge(request()->query(),['standar'=>$activeKey])) }}">
-                <span class="material-symbols-outlined text-[16px] text-rose-600">picture_as_pdf</span> PDF (.pdf)
+            <a class="flex items-center gap-2 px-4 py-2 hover:bg-surface-container-low text-xs text-on-surface" href="{{ route('export.excel', array_merge(request()->query(),['standar'=>$activeKey, 'format'=>'json'])) }}">
+                <span class="material-symbols-outlined text-[16px] text-blue-600">terminal</span> JSON (.json)
             </a>
         </div>
     </details>

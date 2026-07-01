@@ -41,24 +41,46 @@ class ScansExport implements FromQuery, WithHeadings, WithMapping
 
     public function headings(): array
     {
-        return [
-            'Tanggal',
-            'Jam',
-            'Interface',
-            'SSID',
-            'Download (Mbps)',
-            'Upload (Mbps)',
-            'Ping (ms)',
-            'Signal (dBm)',
-            'Score',
-            'Kategori',
-            'Standar Penilaian',   // ← kolom info standar yang dipakai
+        $exportSettings = [
+            'columns' => ['tanggal','jam','interface','ssid','download','upload','ping','signal','score','kategori'],
         ];
+        if (file_exists(storage_path('app/export_settings.json'))) {
+            $exportSettings = array_merge($exportSettings, json_decode(file_get_contents(storage_path('app/export_settings.json')), true) ?? []);
+        }
+
+        $allHeadings = [
+            'tanggal'   => 'Tanggal',
+            'jam'       => 'Jam',
+            'interface' => 'Interface',
+            'ssid'      => 'SSID',
+            'download'  => 'Download (Mbps)',
+            'upload'    => 'Upload (Mbps)',
+            'ping'      => 'Ping (ms)',
+            'signal'    => 'Signal (dBm)',
+            'score'     => 'Score',
+            'kategori'  => 'Kategori',
+        ];
+
+        $headings = [];
+        foreach ($exportSettings['columns'] as $col) {
+            $colLower = strtolower($col);
+            if (isset($allHeadings[$colLower])) {
+                $headings[] = $allHeadings[$colLower];
+            }
+        }
+        $headings[] = 'Standar Penilaian';
+        return $headings;
     }
 
     public function map($row): array
     {
-        // Recalculate skor pakai standar aktif
+        $exportSettings = [
+            'columns' => ['tanggal','jam','interface','ssid','download','upload','ping','signal','score','kategori'],
+        ];
+        if (file_exists(storage_path('app/export_settings.json'))) {
+            $exportSettings = array_merge($exportSettings, json_decode(file_get_contents(storage_path('app/export_settings.json')), true) ?? []);
+        }
+
         $scored = ScoringService::calculate(
             download:   $row->download  ?? 0,
             upload:     $row->upload    ?? 0,
@@ -68,18 +90,43 @@ class ScansExport implements FromQuery, WithHeadings, WithMapping
             standarKey: $this->standarKey,
         );
 
-        return [
-            $row->tanggal,
-            $row->jam,
-            strtoupper($row->interface ?? 'WLAN'),
-            $row->ssid ?? 'Ethernet',
-            $row->download ?? 0,
-            $row->upload   ?? 0,
-            $row->ping     ?? 0,
-            $row->signal   ?? '-',
-            $scored['score'],
-            $scored['kategori'],
-            $this->standarLabel,
-        ];
+        $mapped = [];
+        foreach ($exportSettings['columns'] as $col) {
+            $colLower = strtolower($col);
+            switch ($colLower) {
+                case 'tanggal':
+                    $mapped[] = $row->tanggal;
+                    break;
+                case 'jam':
+                    $mapped[] = $row->jam;
+                    break;
+                case 'interface':
+                    $mapped[] = strtoupper($row->interface ?? 'WLAN');
+                    break;
+                case 'ssid':
+                    $mapped[] = $row->ssid ?? 'Ethernet';
+                    break;
+                case 'download':
+                    $mapped[] = $row->download ?? 0;
+                    break;
+                case 'upload':
+                    $mapped[] = $row->upload ?? 0;
+                    break;
+                case 'ping':
+                    $mapped[] = $row->ping ?? 0;
+                    break;
+                case 'signal':
+                    $mapped[] = $row->signal ?? '-';
+                    break;
+                case 'score':
+                    $mapped[] = $scored['score'];
+                    break;
+                case 'kategori':
+                    $mapped[] = $scored['kategori'];
+                    break;
+            }
+        }
+        $mapped[] = $this->standarLabel;
+        return $mapped;
     }
 }

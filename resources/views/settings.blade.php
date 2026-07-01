@@ -171,29 +171,38 @@
                             <label class="font-label-caps text-on-surface-variant block mb-sm">DEFAULT FORMAT</label>
                             <div class="flex gap-md">
                                 <label class="flex items-center gap-xs cursor-pointer group">
-                                    <input class="text-secondary focus:ring-secondary/20 w-4 h-4" name="format" type="radio" value="csv">
+                                    <input class="text-secondary focus:ring-secondary/20 w-4 h-4" name="export_format" type="radio" value="csv"
+                                           {{ ($exportSettings['format'] ?? 'xlsx') === 'csv' ? 'checked' : '' }}>
                                     <span class="font-body-md group-hover:text-secondary transition-colors text-sm text-primary">CSV</span>
                                 </label>
                                 <label class="flex items-center gap-xs cursor-pointer group">
-                                    <input class="text-secondary focus:ring-secondary/20 w-4 h-4" name="format" type="radio" value="json">
+                                    <input class="text-secondary focus:ring-secondary/20 w-4 h-4" name="export_format" type="radio" value="json"
+                                           {{ ($exportSettings['format'] ?? 'xlsx') === 'json' ? 'checked' : '' }}>
                                     <span class="font-body-md group-hover:text-secondary transition-colors text-sm text-primary">JSON</span>
                                 </label>
                                 <label class="flex items-center gap-xs cursor-pointer group">
-                                    <input checked class="text-secondary focus:ring-secondary/20 w-4 h-4" name="format" type="radio" value="xlsx">
+                                    <input class="text-secondary focus:ring-secondary/20 w-4 h-4" name="export_format" type="radio" value="xlsx"
+                                           {{ ($exportSettings['format'] ?? 'xlsx') === 'xlsx' ? 'checked' : '' }}>
                                     <span class="font-body-md group-hover:text-secondary transition-colors text-sm text-primary">XLSX</span>
                                 </label>
                             </div>
                         </div>
                         <div>
                             <label class="font-label-caps text-on-surface-variant block mb-1">FILENAME PREFIX</label>
-                            <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-md py-sm font-code-data text-sm text-primary focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all" type="text" value="NETRA_SCAN_">
+                            <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-md py-sm font-code-data text-sm text-primary focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all" 
+                                   type="text" name="export_prefix" value="{{ $exportSettings['prefix'] ?? 'NETRA_SCAN_' }}">
                         </div>
                         <div>
                             <label class="font-label-caps text-on-surface-variant block mb-sm">COLUMN CHECKLIST</label>
                             <div class="grid grid-cols-3 sm:grid-cols-4 gap-sm p-md bg-surface-container-low rounded-lg text-xs">
                                 @foreach(['Tanggal','Jam','Interface','SSID','Download','Upload','Ping','Signal','Score','Kategori'] as $col)
+                                    @php
+                                        $colLower = strtolower($col);
+                                        $isChecked = in_array($colLower, $exportSettings['columns'] ?? []);
+                                    @endphp
                                     <label class="flex items-center gap-2 cursor-pointer select-none text-primary">
-                                        <input type="checkbox" checked class="rounded border-outline-variant text-secondary focus:ring-secondary/20 w-4 h-4">
+                                        <input type="checkbox" name="export_columns[]" value="{{ $colLower }}" {{ $isChecked ? 'checked' : '' }}
+                                               class="rounded border-outline-variant text-secondary focus:ring-secondary/20 w-4 h-4">
                                         <span class="font-medium text-primary">{{ $col }}</span>
                                     </label>
                                 @endforeach
