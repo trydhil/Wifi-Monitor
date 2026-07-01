@@ -5,12 +5,18 @@ use App\Http\Controllers\ManualScanController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Support\Facades\Route;
 
 // ── Auth ──────────────────────────────────────────────────
 Route::get('/login',  [LoginController::class, 'create'])->middleware('guest')->name('login');
 Route::post('/login', [LoginController::class, 'store'])->middleware('guest');
 Route::post('/logout',[LoginController::class, 'destroy'])->middleware('auth')->name('logout');
+
+Route::get('/auth/google',              [GoogleController::class, 'redirectToGoogle'])->middleware('guest')->name('auth.google');
+Route::get('/auth/google/callback',      [GoogleController::class, 'handleGoogleCallback'])->middleware('guest');
+Route::get('/auth/google/mock-chooser',  [GoogleController::class, 'showMockPage'])->middleware('guest')->name('auth.google.mock');
+Route::post('/auth/google/mock-login',   [GoogleController::class, 'handleMockLogin'])->middleware('guest')->name('auth.google.mock-login');
 
 // ── Protected ─────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
