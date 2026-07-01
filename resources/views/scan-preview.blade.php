@@ -10,6 +10,44 @@
 @endsection
 
 @section('content')
+<style>
+    @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(24px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes drawArc {
+        from { stroke-dashoffset: 282.7; }
+    }
+    @keyframes fadeSlideUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scalePop {
+        from { transform: scale(0.7); opacity: 0; }
+        to   { transform: scale(1); opacity: 1; }
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    @keyframes netra-ripple {
+        from { transform: scale(0.2); opacity: 0.8; }
+        to   { transform: scale(1.4); opacity: 0; }
+    }
+    @keyframes orbit {
+        from { transform: rotate(0deg) translateX(52px); }
+        to   { transform: rotate(360deg) translateX(52px); }
+    }
+    @keyframes drawArcSlow {
+        from { stroke-dashoffset: 339; }
+        to   { stroke-dashoffset: 0; }
+    }
+    @keyframes netra-pulse-ring {
+        0%   { transform: scale(.3); opacity: 0; }
+        50%  { opacity: 0.5; }
+        100% { transform: scale(1.1); opacity: 0; }
+    }
+</style>
 <div class="p-lg flex gap-lg max-w-container-max mx-auto w-full flex-1 flex-col lg:flex-row">
     <!-- Left Column (58%) -->
     <div class="w-full lg:w-[58%] space-y-lg">
@@ -24,15 +62,16 @@
             
             <div class="p-lg">
                 <!-- Detection Zone -->
-                <div class="relative h-64 w-full border-2 border-dashed border-outline-variant/50 rounded-xl bg-surface-container-low flex flex-col items-center justify-center overflow-hidden mb-lg">
+                <div class="animate-[fadeSlideUp_0.5s_ease-out_both] relative h-64 w-full border-2 border-dashed border-outline-variant/50 rounded-xl bg-surface-container-low flex flex-col items-center justify-center overflow-hidden mb-lg">
                     <!-- Background Grid Effect -->
-                    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
+                    <div class="absolute inset-0 pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px; opacity: 0.03"></div>
                     
                     <!-- Animated Pulse -->
-                    <div class="relative flex items-center justify-center">
-                        <div class="absolute w-48 h-48 border border-secondary/20 rounded-full wifi-pulse"></div>
-                        <div class="absolute w-32 h-32 border border-secondary/40 rounded-full wifi-pulse" style="animation-delay: 0.5s"></div>
-                        <div class="absolute w-16 h-16 border border-secondary/60 rounded-full wifi-pulse" style="animation-delay: 1s"></div>
+                    <div class="relative flex items-center justify-center w-48 h-48">
+                        <div class="absolute w-48 h-48 border border-secondary/20 rounded-full animate-[netra-pulse-ring_2s_cubic-bezier(0.215,0.610,0.355,1)_infinite]" style="animation-delay: 0s;"></div>
+                        <div class="absolute w-32 h-32 border border-secondary/40 rounded-full animate-[netra-pulse-ring_2s_cubic-bezier(0.215,0.610,0.355,1)_infinite]" style="animation-delay: 0.5s;"></div>
+                        <div class="absolute w-16 h-16 border border-secondary/60 rounded-full animate-[netra-pulse-ring_2s_cubic-bezier(0.215,0.610,0.355,1)_infinite]" style="animation-delay: 1s;"></div>
+                        
                         <div class="z-10 bg-secondary w-20 h-20 rounded-full flex items-center justify-center shadow-lg shadow-secondary/30">
                             @if(isset($scan) && ($scan['interface']??'WLAN')==='LAN')
                                 <span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings: 'FILL' 1;">ethernet</span>
@@ -43,7 +82,7 @@
                     </div>
                     
                     @if(isset($scan))
-                        <p class="mt-6 font-title-sm text-on-surface-variant">
+                        <p class="mt-6 font-title-sm text-on-surface-variant z-10">
                             Terdeteksi: <strong>{{ strtoupper($scan['interface'] ?? 'WLAN') }}</strong>
                             @if(($scan['interface']??'WLAN')==='WLAN')
                                 (SSID: {{ $scan['ssid'] ?? '—' }})
@@ -52,7 +91,7 @@
                             @endif
                         </p>
                     @else
-                        <p class="mt-6 font-title-sm text-on-surface-variant">Scanning for active frequencies...</p>
+                        <p class="mt-6 font-title-sm text-on-surface-variant z-10">Scanning for active frequencies...</p>
                     @endif
                 </div>
 
@@ -161,7 +200,7 @@
 
     <!-- Right Column (42%) -->
     @if(isset($scan))
-    <div class="w-full lg:w-[42%]">
+    <div class="w-full lg:w-[42%] animate-[slideInRight_0.45s_cubic-bezier(0.22,1,0.36,1)_both]">
         <div class="sticky top-[88px] space-y-lg">
             <section class="bg-surface-container-lowest custom-shadow rounded-xl border border-outline-variant/30 overflow-hidden">
                 <div class="px-lg py-md border-b border-outline-variant/30">
@@ -184,21 +223,21 @@
                         <div class="relative w-48 h-48">
                             <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
                                 <circle class="text-surface-container-high" cx="50" cy="50" fill="transparent" r="{{ $radius }}" stroke="currentColor" stroke-width="8"></circle>
-                                <circle class="{{ $scColorClass }} transition-all duration-1000" cx="50" cy="50" fill="transparent" r="{{ $radius }}" stroke="currentColor" stroke-dasharray="{{ $circ }}" stroke-dashoffset="{{ $offset }}" stroke-width="8" stroke-linecap="round"></circle>
+                                <circle class="{{ $scColorClass }}" style="animation: drawArc 1.2s ease-out 0.3s both" cx="50" cy="50" fill="transparent" r="{{ $radius }}" stroke="currentColor" stroke-dasharray="{{ $circ }}" stroke-dashoffset="{{ $offset }}" stroke-width="8" stroke-linecap="round"></circle>
                             </svg>
                             <div class="absolute inset-0 flex flex-col items-center justify-center">
                                 <span class="font-display-lg text-4xl text-primary leading-none">{{ $score }}</span>
                                 <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mt-1">Netra Score</span>
                             </div>
                         </div>
-                        <div class="mt-4 px-4 py-1.5 {{ $scBgClass }} rounded-full font-bold text-sm tracking-wide">
+                        <div class="mt-4 px-4 py-1.5 {{ $scBgClass }} rounded-full font-bold text-sm tracking-wide animate-[scalePop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_0.8s_both]">
                             {{ strtoupper($kategori) }}
                         </div>
                     </div>
 
                     <!-- Metric Cards Grid -->
                     <div class="grid grid-cols-2 gap-md">
-                        <div class="p-4 bg-surface-container-low border border-outline-variant/20 rounded-xl">
+                        <div class="p-4 bg-surface-container-low border border-outline-variant/20 rounded-xl animate-[fadeSlideUp_0.4s_ease-out_both]" style="animation-delay: 0.4s;">
                             <div class="flex items-center gap-2 text-on-surface-variant mb-2">
                                 <span class="material-symbols-outlined text-sm">download</span>
                                 <span class="text-[11px] font-bold uppercase tracking-wider">Download</span>
@@ -209,7 +248,7 @@
                             </div>
                         </div>
                         
-                        <div class="p-4 bg-surface-container-low border border-outline-variant/20 rounded-xl">
+                        <div class="p-4 bg-surface-container-low border border-outline-variant/20 rounded-xl animate-[fadeSlideUp_0.4s_ease-out_both]" style="animation-delay: 0.5s;">
                             <div class="flex items-center gap-2 text-on-surface-variant mb-2">
                                 <span class="material-symbols-outlined text-sm">upload</span>
                                 <span class="text-[11px] font-bold uppercase tracking-wider">Upload</span>
@@ -220,7 +259,7 @@
                             </div>
                         </div>
                         
-                        <div class="p-4 bg-surface-container-low border border-outline-variant/20 rounded-xl">
+                        <div class="p-4 bg-surface-container-low border border-outline-variant/20 rounded-xl animate-[fadeSlideUp_0.4s_ease-out_both]" style="animation-delay: 0.6s;">
                             <div class="flex items-center gap-2 text-on-surface-variant mb-2">
                                 <span class="material-symbols-outlined text-sm">timer</span>
                                 <span class="text-[11px] font-bold uppercase tracking-wider">Ping</span>
@@ -231,7 +270,7 @@
                             </div>
                         </div>
                         
-                        <div class="p-4 bg-surface-container-low border border-outline-variant/20 rounded-xl">
+                        <div class="p-4 bg-surface-container-low border border-outline-variant/20 rounded-xl animate-[fadeSlideUp_0.4s_ease-out_both]" style="animation-delay: 0.7s;">
                             <div class="flex items-center gap-2 text-on-surface-variant mb-2">
                                 <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">signal_cellular_alt</span>
                                 <span class="text-[11px] font-bold uppercase tracking-wider">Signal</span>
@@ -254,7 +293,7 @@
 
                 <!-- Collapsible Table -->
                 @if(!empty($comparisons))
-                <div class="border-t border-outline-variant/30">
+                <div class="border-t border-outline-variant/30 animate-[fadeIn_0.3s_ease-out_1s_both]">
                     <details class="group" open>
                         <summary class="flex justify-between items-center px-lg py-md cursor-pointer hover:bg-surface-container-high transition-colors">
                             <h4 class="font-title-sm text-sm text-primary">Perbandingan Standar</h4>
@@ -293,7 +332,7 @@
                 @endif
                 
                 <!-- Preview warning -->
-                <div class="m-3 p-3 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg flex items-start gap-2 text-xs">
+                <div class="m-3 p-3 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg flex items-start gap-2 text-xs animate-[fadeSlideUp_0.3s_ease-out_1.1s_both]">
                     <span class="material-symbols-outlined text-[16px] mt-0.5" style="font-variation-settings: 'FILL' 1;">warning</span>
                     <span><strong>Preview saja</strong> — data ini tidak disimpan ke database. Scan otomatis berjalan tiap 1 jam.</span>
                 </div>
@@ -390,29 +429,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.classList.add('opacity-50', 'pointer-events-none');
             }
 
-            // Replace Detection Zone content with a premium holographic rotating squares spinner
+            // Replace Detection Zone content with GPU-optimized ripple rings, SVG progress arc, orbiting dot, and core wifi_find
             detectionZone.innerHTML = `
-                <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
+                <div class="absolute inset-0 pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px; opacity: 0.03"></div>
                 
-                <div class="relative flex flex-col items-center justify-center w-full px-lg">
-                    <!-- Advanced Hologram Rotating Squares (Tilted diamonds) -->
-                    <div class="relative w-36 h-36 mb-md flex items-center justify-center">
-                        <!-- Outer dashed square rotating -->
-                        <div class="absolute w-24 h-24 rounded-[1.5rem] border-2 border-dashed border-secondary/40 animate-[spin_12s_linear_infinite]"></div>
-                        <!-- Inner solid square rotating in reverse -->
-                        <div class="absolute w-24 h-24 rounded-[1.5rem] border-2 border-secondary animate-[spin_6s_linear_infinite_reverse]"></div>
-                        <!-- Blurred glowing backdrop -->
-                        <div class="absolute w-12 h-12 rounded-full bg-secondary/15 filter blur-sm animate-pulse"></div>
-                        <!-- Core concentric targets -->
-                        <div class="relative z-10 w-12 h-12 rounded-full bg-surface-container border-2 border-secondary/80 flex items-center justify-center shadow-sm">
-                            <div class="w-8 h-8 rounded-full border border-secondary/60 flex items-center justify-center animate-pulse">
-                                <div class="w-4 h-4 rounded-full bg-secondary"></div>
-                            </div>
+                <div class="relative flex flex-col items-center justify-center h-full w-full">
+                    <!-- Visual Scanner Container -->
+                    <div class="relative w-36 h-36 flex items-center justify-center">
+                        <!-- Ripple Rings -->
+                        <div class="absolute w-24 h-24 rounded-full border border-secondary bg-secondary/5 animate-[netra-ripple_2.4s_ease-out_infinite]" style="animation-delay: 0s;"></div>
+                        <div class="absolute w-24 h-24 rounded-full border border-secondary bg-secondary/5 animate-[netra-ripple_2.4s_ease-out_infinite]" style="animation-delay: 0.8s;"></div>
+                        <div class="absolute w-24 h-24 rounded-full border border-secondary bg-secondary/5 animate-[netra-ripple_2.4s_ease-out_infinite]" style="animation-delay: 1.6s;"></div>
+                        
+                        <!-- SVG ARC PROGRESS -->
+                        <svg class="absolute w-30 h-30 -rotate-90" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="54" fill="none" stroke="#0051d5" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="339" style="animation: drawArcSlow 40s linear infinite;"></circle>
+                        </svg>
+                        
+                        <!-- Orbiting Dot -->
+                        <div class="absolute w-2.5 h-2.5 bg-secondary rounded-full shadow-[0_0_8px_#0051d5]" style="animation: orbit 3s linear infinite;"></div>
+                        
+                        <!-- CORE -->
+                        <div class="z-10 bg-secondary w-16 h-16 rounded-full flex items-center justify-center shadow-lg shadow-secondary/30 animate-[pulse_1.8s_ease-in-out_infinite]">
+                            <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings: 'FILL' 1;">wifi_find</span>
                         </div>
                     </div>
                     
-                    <!-- Dynamic Status Text -->
-                    <div class="text-[11px] font-bold text-on-surface-variant tracking-wider uppercase mt-2" id="scan-progress-text">Mendeteksi Antarmuka Jaringan...</div>
+                    <!-- STATUS TEXT -->
+                    <div id="scan-progress-text" class="text-[11px] font-bold tracking-[0.15em] uppercase text-on-surface-variant mt-4 animate-[pulse_2s_ease-in-out_infinite]">Mendeteksi Antarmuka Jaringan...</div>
                 </div>
             `;
             
