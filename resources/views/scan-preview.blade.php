@@ -15,9 +15,6 @@
         from { opacity: 0; transform: translateX(24px); }
         to   { opacity: 1; transform: translateX(0); }
     }
-    @keyframes drawArc {
-        from { stroke-dashoffset: 282.7; }
-    }
     @keyframes fadeSlideUp {
         from { opacity: 0; transform: translateY(10px); }
         to   { opacity: 1; transform: translateY(0); }
@@ -46,6 +43,29 @@
         0%   { transform: scale(.3); opacity: 0; }
         50%  { opacity: 0.5; }
         100% { transform: scale(1.1); opacity: 0; }
+    }
+    
+    /* Animation helper classes */
+    .ripple-ring-1 {
+        animation: netra-ripple 2.4s ease-out infinite;
+        animation-delay: 0s;
+    }
+    .ripple-ring-2 {
+        animation: netra-ripple 2.4s ease-out infinite;
+        animation-delay: 0.8s;
+    }
+    .ripple-ring-3 {
+        animation: netra-ripple 2.4s ease-out infinite;
+        animation-delay: 1.6s;
+    }
+    .orbiting-dot-anim {
+        animation: orbit 3s linear infinite;
+    }
+    .pulse-core-anim {
+        animation: pulse 1.8s ease-in-out infinite;
+    }
+    .status-text-pulse {
+        animation: pulse 2s ease-in-out infinite;
     }
 </style>
 <div class="p-lg flex gap-lg max-w-container-max mx-auto w-full flex-1 flex-col lg:flex-row">
@@ -200,6 +220,21 @@
 
     <!-- Right Column (42%) -->
     @if(isset($scan))
+    @php
+        $score = $scan['score'] ?? 0;
+        $radius = 45;
+        $circ = 2 * M_PI * $radius;
+        $offset = $circ * (1 - $score / 100);
+        $kategori = $scan['kategori'] ?? 'Buruk';
+        $scColorClass = $score >= 90 ? 'text-secondary' : ($score >= 75 ? 'text-secondary-container' : ($score >= 60 ? 'text-warning' : 'text-error'));
+        $scBgClass = $score >= 90 ? 'bg-green-100 text-green-700' : ($score >= 75 ? 'bg-blue-100 text-blue-700' : ($score >= 60 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'));
+    @endphp
+    <style>
+        @keyframes drawArc {
+            from { stroke-dashoffset: 282.7; }
+            to   { stroke-dashoffset: {{ $offset }}; }
+        }
+    </style>
     <div class="w-full lg:w-[42%] animate-[slideInRight_0.45s_cubic-bezier(0.22,1,0.36,1)_both]">
         <div class="sticky top-[88px] space-y-lg">
             <section class="bg-surface-container-lowest custom-shadow rounded-xl border border-outline-variant/30 overflow-hidden">
@@ -209,16 +244,6 @@
                 
                 <div class="p-lg">
                     <!-- Score Donut Gauge -->
-                    @php
-                        $score = $scan['score'] ?? 0;
-                        $kategori = $scan['kategori'] ?? 'Buruk';
-                        $radius = 45;
-                        $circ = 2 * M_PI * $radius;
-                        $offset = $circ * (1 - $score / 100);
-                        
-                        $scColorClass = $score >= 90 ? 'text-secondary' : ($score >= 75 ? 'text-secondary-container' : ($score >= 60 ? 'text-warning' : 'text-error'));
-                        $scBgClass = $score >= 90 ? 'bg-green-100 text-green-700' : ($score >= 75 ? 'bg-blue-100 text-blue-700' : ($score >= 60 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'));
-                    @endphp
                     <div class="flex flex-col items-center mb-xl">
                         <div class="relative w-48 h-48">
                             <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -437,9 +462,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- Visual Scanner Container -->
                     <div class="relative w-36 h-36 flex items-center justify-center">
                         <!-- Ripple Rings -->
-                        <div class="absolute w-24 h-24 rounded-full border border-secondary bg-secondary/5 animate-[netra-ripple_2.4s_ease-out_infinite]" style="animation-delay: 0s;"></div>
-                        <div class="absolute w-24 h-24 rounded-full border border-secondary bg-secondary/5 animate-[netra-ripple_2.4s_ease-out_infinite]" style="animation-delay: 0.8s;"></div>
-                        <div class="absolute w-24 h-24 rounded-full border border-secondary bg-secondary/5 animate-[netra-ripple_2.4s_ease-out_infinite]" style="animation-delay: 1.6s;"></div>
+                        <div class="absolute w-24 h-24 rounded-full border border-secondary bg-secondary/5 ripple-ring-1"></div>
+                        <div class="absolute w-24 h-24 rounded-full border border-secondary bg-secondary/5 ripple-ring-2"></div>
+                        <div class="absolute w-24 h-24 rounded-full border border-secondary bg-secondary/5 ripple-ring-3"></div>
                         
                         <!-- SVG ARC PROGRESS -->
                         <svg class="absolute w-30 h-30 -rotate-90" viewBox="0 0 120 120">
@@ -447,16 +472,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         </svg>
                         
                         <!-- Orbiting Dot -->
-                        <div class="absolute w-2.5 h-2.5 bg-secondary rounded-full shadow-[0_0_8px_#0051d5]" style="animation: orbit 3s linear infinite;"></div>
+                        <div class="absolute w-2.5 h-2.5 bg-secondary rounded-full shadow-[0_0_8px_#0051d5] orbiting-dot-anim"></div>
                         
                         <!-- CORE -->
-                        <div class="z-10 bg-secondary w-16 h-16 rounded-full flex items-center justify-center shadow-lg shadow-secondary/30 animate-[pulse_1.8s_ease-in-out_infinite]">
+                        <div class="z-10 bg-secondary w-16 h-16 rounded-full flex items-center justify-center shadow-lg shadow-secondary/30 pulse-core-anim">
                             <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings: 'FILL' 1;">wifi_find</span>
                         </div>
                     </div>
                     
                     <!-- STATUS TEXT -->
-                    <div id="scan-progress-text" class="text-[11px] font-bold tracking-[0.15em] uppercase text-on-surface-variant mt-4 animate-[pulse_2s_ease-in-out_infinite]">Mendeteksi Antarmuka Jaringan...</div>
+                    <div id="scan-progress-text" class="text-[11px] font-bold tracking-[0.15em] uppercase text-on-surface-variant mt-4 status-text-pulse">Mendeteksi Antarmuka Jaringan...</div>
                 </div>
             `;
             
