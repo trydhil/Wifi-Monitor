@@ -270,53 +270,45 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
             {{-- Card 3: Interface Proportion --}}
-            <div class="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant shadow-sm flex flex-col h-full">
-                <h4 class="font-title-sm text-sm text-primary mb-md">Interface Proportion</h4>
-                @php
-                    $wlanCount = $interfaceComparison['wlan']['count'] ?? 0;
-                    $lanCount  = $interfaceComparison['lan']['count']  ?? 0;
-                    $total2    = $wlanCount + $lanCount;
-                    $wlanPct   = $total2>0 ? round($wlanCount/$total2*100) : 0;
-                    $lanPct    = 100-$wlanPct;
-                    $wlanDash  = $total2>0 ? round(($wlanPct/100)*100.53, 1) : 0;
-                @endphp
-                <div class="flex-1 flex items-center justify-center gap-xl py-sm">
-                    <div class="relative w-28 h-28 flex-shrink-0">
-                        <svg class="w-full h-full" viewBox="0 0 36 36" style="transform: rotate(-90deg)">
-                            <!-- Gray baseline circle -->
-                            <circle cx="18" cy="18" r="16" fill="none" stroke="#eceef0" stroke-width="3.5"/>
-                            @if($total2 > 0)
-                                <!-- WLAN segment (Blue) -->
-                                <circle cx="18" cy="18" r="16" fill="none" stroke="#0051d5" stroke-width="3.5"
-                                        stroke-dasharray="{{ $wlanDash }} 100.53"/>
-                                <!-- LAN segment (Teal) -->
-                                <circle cx="18" cy="18" r="16" fill="none" stroke="#4cd7f6" stroke-width="3.5"
-                                        stroke-dasharray="{{ 100.53 - $wlanDash }} 100.53"
-                                        stroke-dashoffset="{{ -$wlanDash }}"/>
-                            @else
-                                <!-- Fallback WLAN circle when no scans -->
-                                <circle cx="18" cy="18" r="16" fill="none" stroke="#0051d5" stroke-width="3.5"
-                                        stroke-dasharray="100.53 100.53"/>
-                            @endif
-                        </svg>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <span class="font-display-lg text-xl font-bold text-primary leading-none">{{ $total2 }}</span>
-                            <span class="text-[9px] text-on-surface-variant font-medium tracking-wider uppercase mt-1">Scans</span>
-                        </div>
-                    </div>
-                    <div class="space-y-md text-xs select-none">
-                        <div class="flex items-center gap-3">
-                            <span class="w-3 h-3 rounded-full bg-secondary flex-shrink-0"></span>
-                            <div>
-                                <div class="font-bold text-primary text-sm leading-none mb-0.5">WLAN</div>
-                                <div class="text-[11px] text-on-surface-variant font-medium">{{ $wlanCount }} scans ({{ $total2 > 0 ? $wlanPct : 100 }}%)</div>
+            <div class="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant shadow-sm flex flex-col justify-between h-full">
+                <div>
+                    <h4 class="font-title-sm text-sm text-primary mb-md">Interface Proportion</h4>
+                    @php
+                        $wlanCount = $interfaceComparison['wlan']['count'] ?? 0;
+                        $lanCount  = $interfaceComparison['lan']['count']  ?? 0;
+                        $total2    = $wlanCount + $lanCount;
+                        $wlanPct   = $total2>0 ? round($wlanCount/$total2*100) : 0;
+                        $lanPct    = 100-$wlanPct;
+                    @endphp
+                    <div class="flex items-center gap-lg">
+                        <div class="relative w-24 h-24 flex-shrink-0">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <circle class="stroke-surface-container-highest" cx="18" cy="18" fill="none" r="16" stroke-width="4" stroke="#eceef0"></circle>
+                                @if($total2 > 0)
+                                    <circle cx="18" cy="18" fill="none" r="16" stroke-width="4" stroke="#0051d5" pathLength="100" stroke-dasharray="{{ $wlanPct }} 100"></circle>
+                                    <circle cx="18" cy="18" fill="none" r="16" stroke-width="4" stroke="#4cd7f6" pathLength="100" stroke-dasharray="{{ $lanPct }} 100" stroke-dashoffset="-{{ $wlanPct }}"></circle>
+                                @else
+                                    <circle cx="18" cy="18" fill="none" r="16" stroke-width="4" stroke="#0051d5" pathLength="100" stroke-dasharray="100 100"></circle>
+                                @endif
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="font-title-sm text-title-sm text-primary font-bold">{{ $total2 }}</span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span class="w-3 h-3 rounded-full bg-tertiary-fixed-dim flex-shrink-0"></span>
-                            <div>
-                                <div class="font-bold text-primary text-sm leading-none mb-0.5">LAN</div>
-                                <div class="text-[11px] text-on-surface-variant font-medium">{{ $lanCount }} scans ({{ $total2 > 0 ? $lanPct : 0 }}%)</div>
+                        <div class="space-y-sm flex-1 select-none">
+                            <div class="flex items-center gap-sm">
+                                <div class="w-3 h-3 rounded-full bg-secondary"></div>
+                                <div class="flex-1">
+                                    <p class="text-body-sm font-medium leading-none text-primary">WLAN</p>
+                                    <p class="text-[10px] text-on-surface-variant mt-0.5">{{ $wlanCount }} Scans ({{ $total2 > 0 ? $wlanPct : 100 }}%)</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-sm">
+                                <div class="w-3 h-3 rounded-full bg-tertiary-fixed-dim"></div>
+                                <div class="flex-1">
+                                    <p class="text-body-sm font-medium leading-none text-primary">LAN</p>
+                                    <p class="text-[10px] text-on-surface-variant mt-0.5">{{ $lanCount }} Scans ({{ $total2 > 0 ? $lanPct : 0 }}%)</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -324,21 +316,56 @@
             </div>
 
             {{-- Card 4: Weekly Trend --}}
-            <div class="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant shadow-sm lg:col-span-2 flex flex-col">
-                <div class="flex justify-between items-center mb-md">
-                    <div>
-                        <h4 class="font-title-sm text-sm text-primary">Score Improvement Trend</h4>
-                        <p class="text-xs text-on-surface-variant mt-0.5">Weekly performance baseline</p>
-                    </div>
-                    @if(!empty($weeklyTrendPct))
-                        <div class="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold">
-                            <span class="material-symbols-outlined text-[14px]">trending_up</span>
-                            {{ $weeklyTrendPct }}
+            <div class="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant shadow-sm lg:col-span-2 overflow-hidden flex flex-col justify-between h-full">
+                <div>
+                    <div class="flex justify-between items-center mb-md">
+                        <div>
+                            <h3 class="font-title-sm text-title-sm text-primary">Score Improvement Trend</h3>
+                            <p class="text-body-sm text-on-surface-variant mt-0.5">Weekly performance baseline</p>
                         </div>
-                    @endif
-                </div>
-                <div class="h-32 relative flex-1">
-                    <canvas id="chartWeekly" class="w-full h-full"></canvas>
+                        @if(!empty($weeklyTrendPct))
+                            <div class="flex items-center gap-sm bg-green-50 text-green-700 px-md py-sm rounded-lg text-xs font-semibold">
+                                <span class="material-symbols-outlined text-sm">trending_up</span>
+                                <span class="font-title-sm text-title-sm">{{ $weeklyTrendPct }}</span>
+                            </div>
+                        @endif
+                    </div>
+                    
+                    <div class="relative h-32 mt-lg pb-md">
+                        @php
+                            $s1 = $weeklyTrend[0]['avg_score'] ?? 0;
+                            $s2 = $weeklyTrend[1]['avg_score'] ?? 0;
+                            $s3 = $weeklyTrend[2]['avg_score'] ?? 0;
+                            $s4 = $weeklyTrend[3]['avg_score'] ?? 0;
+                            
+                            $y1 = 90 - ($s1 / 100) * 80;
+                            $y2 = 90 - ($s2 / 100) * 80;
+                            $y3 = 90 - ($s3 / 100) * 80;
+                            $y4 = 90 - ($s4 / 100) * 80;
+                        @endphp
+                        <!-- Simple Trend Line Visualization using SVG -->
+                        <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 100">
+                            <path d="M0,{{ $y1 }} Q66,{{ ($y1+$y2)/2 }} 133,{{ $y2 }} T266,{{ $y3 }} T400,{{ $y4 }}" fill="none" stroke="#0051d5" stroke-width="3"></path>
+                            <path d="M0,{{ $y1 }} Q66,{{ ($y1+$y2)/2 }} 133,{{ $y2 }} T266,{{ $y3 }} T400,{{ $y4 }} L400,100 L0,100 Z" fill="url(#trendGradient)" opacity="0.1"></path>
+                            <defs>
+                                <linearGradient id="trendGradient" x1="0%" x2="0%" y1="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#0051d5"></stop>
+                                    <stop offset="100%" stop-color="transparent"></stop>
+                                </linearGradient>
+                            </defs>
+                            <!-- Data Points -->
+                            <circle cx="0" cy="{{ $y1 }}" fill="#0051d5" r="4"></circle>
+                            <circle cx="133" cy="{{ $y2 }}" fill="#0051d5" r="4"></circle>
+                            <circle cx="266" cy="{{ $y3 }}" fill="#0051d5" r="4"></circle>
+                            <circle cx="400" cy="{{ $y4 }}" fill="#0051d5" r="4"></circle>
+                        </svg>
+                        <div class="absolute bottom-[-10px] left-0 right-0 flex justify-between text-[10px] text-on-surface-variant font-code-data select-none">
+                            <span>Week 1</span>
+                            <span>Week 2</span>
+                            <span>Week 3</span>
+                            <span>Week 4</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -379,38 +406,6 @@
 })();
 @endif
 
-// Weekly trend chart
-@if(!empty($weeklyTrend))
-(function(){
-    const labels = @json(collect($weeklyTrend)->pluck('week_label'));
-    const scores = @json(collect($weeklyTrend)->pluck('avg_score'));
-    new Chart(document.getElementById('chartWeekly'),{
-        type:'line',
-        data:{
-            labels,
-            datasets:[{
-                label:'Avg Score',
-                data:scores,
-                borderColor:'#0051d5',
-                backgroundColor:'rgba(0,81,213,0.05)',
-                borderWidth:2,
-                pointRadius:4,
-                pointBackgroundColor:'#0051d5',
-                fill:true,
-                tension:0.35
-            }]
-        },
-        options:{
-            responsive:true,
-            maintainAspectRatio:false,
-            plugins:{legend:{display:false}},
-            scales:{
-                x:{grid:{display:false},ticks:{font:{size:10}}},
-                y:{min:0,max:100,ticks:{font:{size:9},stepSize:25}}
-            }
-        }
-    });
-})();
-@endif
+
 </script>
 @endpush
