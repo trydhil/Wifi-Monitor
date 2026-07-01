@@ -16,23 +16,12 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
-        // ── Ganti password ────────────────────────────────────────────
-        if ($request->filled('old_password')) {
-            $request->validate([
-                'old_password'          => 'required',
-                'new_password'          => 'required|min:6|confirmed',
-            ]);
+        $user = auth()->user();
 
-            if (!Hash::check($request->old_password, auth()->user()->password)) {
-                return back()->withErrors(['old_password' => 'Password lama tidak sesuai.'])->withInput();
-            }
-
-            auth()->user()->update(['password' => Hash::make($request->new_password)]);
-            return back()->with('success', 'Password berhasil diubah.');
-        }
-
-        // ── Scoring config ────────────────────────────────────────────
-        $validated = $request->validate([
+        // Validation rules
+        $rules = [
+            'name'               => 'sometimes|required|string|max:255',
+            'new_password'       => 'nullable|string|min:6|confirmed',
             'weight_download'    => 'required|numeric|min:0|max:100',
             'weight_upload'      => 'required|numeric|min:0|max:100',
             'weight_ping'        => 'required|numeric|min:0|max:100',
@@ -40,8 +29,21 @@ class SettingsController extends Controller
             'threshold_download' => 'required|numeric|min:0.1',
             'threshold_upload'   => 'required|numeric|min:0.1',
             'threshold_ping'     => 'required|numeric|min:0.1',
-        ]);
+        ];
 
+        $validated = $request->validate($rules);
+
+        // Update profile name
+        if ($request->filled('name')) {
+            $user->update(['name' => $validated['name']]);
+        }
+
+        // Update password if typed
+        if ($request->filled('new_password')) {
+            $user->update(['password' => Hash::make($request->new_password)]);
+        }
+
+        // Bobot sum validation
         $total = $validated['weight_download'] + $validated['weight_upload']
                + $validated['weight_ping']    + $validated['weight_signal'];
 
