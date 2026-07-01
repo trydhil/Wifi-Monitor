@@ -109,19 +109,27 @@
             <!-- Progress Steps Footer -->
             <div class="bg-surface-container-low px-lg py-md border-t border-outline-variant/30">
                 <div class="flex justify-between items-center max-w-md mx-auto">
-                    <div class="flex flex-col items-center gap-2 opacity-100">
-                        <div class="w-8 h-8 bg-secondary text-on-secondary rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-secondary/20">1</div>
-                        <span class="text-[11px] font-bold text-secondary uppercase tracking-tight">Initializing</span>
+                    <div id="step-1-container" class="flex flex-col items-center gap-2 opacity-100 transition-all duration-300">
+                        <div id="step-1-circle" class="w-8 h-8 bg-secondary text-on-secondary rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-secondary/20 transition-all duration-300">1</div>
+                        <span id="step-1-text" class="text-[11px] font-bold text-secondary uppercase tracking-tight transition-all duration-300">Initializing</span>
                     </div>
-                    <div class="h-0.5 w-full bg-outline-variant mx-4"></div>
-                    <div class="flex flex-col items-center gap-2 opacity-50">
-                        <div class="w-8 h-8 bg-outline-variant text-on-surface rounded-full flex items-center justify-center text-xs font-bold">2</div>
-                        <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-tight">Calibration</span>
+                    
+                    <div class="h-1 w-full bg-outline-variant rounded-full overflow-hidden mx-4">
+                        <div id="line-1-2" class="h-full bg-secondary w-0 transition-all duration-300"></div>
                     </div>
-                    <div class="h-0.5 w-full bg-outline-variant mx-4"></div>
-                    <div class="flex flex-col items-center gap-2 opacity-50">
-                        <div class="w-8 h-8 bg-outline-variant text-on-surface rounded-full flex items-center justify-center text-xs font-bold">3</div>
-                        <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-tight">Data Collection</span>
+                    
+                    <div id="step-2-container" class="flex flex-col items-center gap-2 opacity-50 transition-all duration-300">
+                        <div id="step-2-circle" class="w-8 h-8 bg-outline-variant text-on-surface rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300">2</div>
+                        <span id="step-2-text" class="text-[11px] font-bold text-on-surface-variant uppercase tracking-tight transition-all duration-300">Calibration</span>
+                    </div>
+                    
+                    <div class="h-1 w-full bg-outline-variant rounded-full overflow-hidden mx-4">
+                        <div id="line-2-3" class="h-full bg-secondary w-0 transition-all duration-300"></div>
+                    </div>
+                    
+                    <div id="step-3-container" class="flex flex-col items-center gap-2 opacity-50 transition-all duration-300">
+                        <div id="step-3-circle" class="w-8 h-8 bg-outline-variant text-on-surface rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300">3</div>
+                        <span id="step-3-text" class="text-[11px] font-bold text-on-surface-variant uppercase tracking-tight transition-all duration-300">Data Collection</span>
                     </div>
                 </div>
             </div>
@@ -302,43 +310,119 @@ document.addEventListener('DOMContentLoaded', function() {
     const scanForm = document.getElementById('scanForm');
     const detectionZone = document.querySelector('.relative.h-64');
     
+    // Dynamic progress steps function
+    function updateProgressSteps(p) {
+        const step1Circle = document.getElementById('step-1-circle');
+        const step1Text = document.getElementById('step-1-text');
+        const step1Container = document.getElementById('step-1-container');
+        const line12 = document.getElementById('line-1-2');
+        
+        const step2Circle = document.getElementById('step-2-circle');
+        const step2Text = document.getElementById('step-2-text');
+        const step2Container = document.getElementById('step-2-container');
+        const line23 = document.getElementById('line-2-3');
+        
+        const step3Circle = document.getElementById('step-3-circle');
+        const step3Text = document.getElementById('step-3-text');
+        const step3Container = document.getElementById('step-3-container');
+
+        if (!step1Circle || !step2Circle || !step3Circle) return;
+
+        if (p <= 33) {
+            // Step 1 Active, filling line 1-2
+            let pct = (p / 33) * 100;
+            line12.style.width = pct + '%';
+            line23.style.width = '0%';
+            
+            // Step 2 Inactive
+            step2Container.classList.add('opacity-50');
+            step2Container.classList.remove('opacity-100');
+            step2Circle.className = "w-8 h-8 bg-outline-variant text-on-surface rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300";
+            step2Text.className = "text-[11px] font-bold text-on-surface-variant uppercase tracking-tight transition-all duration-300";
+            
+            // Step 3 Inactive
+            step3Container.classList.add('opacity-50');
+            step3Container.classList.remove('opacity-100');
+            step3Circle.className = "w-8 h-8 bg-outline-variant text-on-surface rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300";
+            step3Text.className = "text-[11px] font-bold text-on-surface-variant uppercase tracking-tight transition-all duration-300";
+        } else if (p <= 66) {
+            // Step 1 done, line 1-2 full
+            line12.style.width = '100%';
+            
+            // Step 2 Active, filling line 2-3
+            let pct = ((p - 33) / 33) * 100;
+            line23.style.width = pct + '%';
+            
+            step2Container.classList.remove('opacity-50');
+            step2Container.classList.add('opacity-100');
+            step2Circle.className = "w-8 h-8 bg-secondary text-on-secondary rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-secondary/20 transition-all duration-300";
+            step2Text.className = "text-[11px] font-bold text-secondary uppercase tracking-tight transition-all duration-300";
+            
+            // Step 3 Inactive
+            step3Container.classList.add('opacity-50');
+            step3Container.classList.remove('opacity-100');
+            step3Circle.className = "w-8 h-8 bg-outline-variant text-on-surface rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300";
+            step3Text.className = "text-[11px] font-bold text-on-surface-variant uppercase tracking-tight transition-all duration-300";
+        } else {
+            // Step 1 and 2 done
+            line12.style.width = '100%';
+            line23.style.width = '100%';
+            
+            step2Circle.className = "w-8 h-8 bg-secondary text-on-secondary rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-secondary/20 transition-all duration-300";
+            step2Text.className = "text-[11px] font-bold text-secondary uppercase tracking-tight transition-all duration-300";
+            
+            // Step 3 Active
+            step3Container.classList.remove('opacity-50');
+            step3Container.classList.add('opacity-100');
+            step3Circle.className = "w-8 h-8 bg-secondary text-on-secondary rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-secondary/20 transition-all duration-300 animate-pulse";
+            step3Text.className = "text-[11px] font-bold text-secondary uppercase tracking-tight transition-all duration-300";
+        }
+    }
+    
     if (scanForm && detectionZone) {
         scanForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Simpan tombol dan matikan interaksi
+            // Disable button
             const submitBtn = scanForm.querySelector('button[type="submit"]');
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.classList.add('opacity-50', 'pointer-events-none');
             }
 
-            // Ganti konten Detection Zone dengan UI progress loading
+            // Replace Detection Zone content with a premium holographic radar spinner
             detectionZone.innerHTML = `
                 <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
                 
                 <div class="relative flex flex-col items-center justify-center w-full px-lg">
-                    <!-- Rotating loader icon -->
-                    <div class="relative w-20 h-20 mb-md flex items-center justify-center">
-                        <div class="absolute inset-0 rounded-full border-4 border-outline-variant/30"></div>
-                        <div class="absolute inset-0 rounded-full border-4 border-secondary border-t-transparent animate-spin"></div>
-                        <span class="material-symbols-outlined text-secondary text-3xl font-bold">radar</span>
+                    <!-- Advanced Hologram Radar Rings -->
+                    <div class="relative w-32 h-32 mb-md flex items-center justify-center">
+                        <!-- Outer rotating dashed ring -->
+                        <div class="absolute inset-0 rounded-full border-2 border-dashed border-secondary/40 animate-[spin_10s_linear_infinite]"></div>
+                        <!-- Middle rotating solid scanner -->
+                        <div class="absolute inset-2 rounded-full border-2 border-secondary border-t-transparent animate-[spin_3s_linear_infinite]"></div>
+                        <!-- Inner opposite rotating dotted ring -->
+                        <div class="absolute inset-4 rounded-full border border-dotted border-secondary/50 animate-[spin_6s_linear_infinite_reverse]"></div>
+                        <!-- Blurred glowing backdrop -->
+                        <div class="absolute inset-6 rounded-full bg-secondary/10 filter blur-md animate-pulse"></div>
+                        <!-- Core icon -->
+                        <span class="material-symbols-outlined text-secondary text-3xl font-bold animate-[pulse_1.5s_ease-in-out_infinite] z-10" style="font-variation-settings: 'FILL' 1;">radar</span>
                     </div>
                     
                     <!-- Progress Percentage -->
-                    <div class="text-2xl font-bold text-primary mb-1" id="scan-progress-pct">0%</div>
+                    <div class="text-3xl font-bold text-primary tracking-tight mb-1" id="scan-progress-pct">0%</div>
                     
                     <!-- Progress Bar -->
-                    <div class="w-64 bg-surface-container-high rounded-full h-2 mb-sm overflow-hidden border border-outline-variant/30">
-                        <div id="scan-progress-bar" class="bg-secondary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    <div class="w-64 bg-surface-container-high rounded-full h-2 mb-sm overflow-hidden border border-outline-variant/30 relative">
+                        <div id="scan-progress-bar" class="bg-secondary h-full rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(0,102,255,0.5)]" style="width: 0%"></div>
                     </div>
                     
                     <!-- Dynamic Status Text -->
-                    <div class="text-xs text-on-surface-variant font-medium tracking-wide uppercase" id="scan-progress-text">Mendeteksi Antarmuka Jaringan...</div>
+                    <div class="text-[11px] font-bold text-on-surface-variant tracking-wider uppercase" id="scan-progress-text">Mendeteksi Antarmuka Jaringan...</div>
                 </div>
             `;
             
-            // Start AJAX call to trigger Python scan
+            // Start AJAX call
             let ajaxCompleted = false;
             let scanError = null;
             
@@ -361,7 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 scanError = err.message;
             });
             
-            // smooth progress simulation
+            // Smooth progress simulation
             let progress = 0;
             const progressTexts = [
                 { limit: 20, text: "Mendeteksi Antarmuka Jaringan..." },
@@ -376,16 +460,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const txtEl = document.getElementById('scan-progress-text');
             
             const interval = setInterval(() => {
-                // If ajax is not done, caps progress at 95%
                 if (!ajaxCompleted) {
                     if (progress < 95) {
-                        progress += Math.floor(Math.random() * 4) + 1;
+                        progress += Math.floor(Math.random() * 3) + 1;
                         if (progress > 95) progress = 95;
                     }
                 } else {
-                    // AJAX is done, speed up to 100%
                     if (progress < 100) {
-                        progress += 5;
+                        progress += 4;
                         if (progress > 100) progress = 100;
                     }
                 }
@@ -394,20 +476,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 pctEl.textContent = progress + '%';
                 barEl.style.width = progress + '%';
                 
-                // Update status text based on progress
+                // Update dynamic text
                 const textObj = progressTexts.find(pt => progress <= pt.limit);
                 if (textObj) {
                     txtEl.textContent = textObj.text;
                 }
                 
-                // When reaches 100% and AJAX is complete, check for redirect
+                // Update steps dynamically
+                updateProgressSteps(progress);
+                
+                // When done
                 if (progress >= 100 && ajaxCompleted) {
                     clearInterval(interval);
                     if (scanError) {
                         alert(scanError);
                         window.location.reload();
                     } else {
-                        // Reload the page to display results from the session!
                         window.location.href = "{{ route('scan.manual') }}";
                     }
                 }
