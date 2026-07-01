@@ -116,8 +116,9 @@
                 <tbody class="divide-y divide-outline-variant/60 text-body-md text-on-surface">
                     @forelse($scans as $index => $scan)
                         @php
-                            $iface  = strtoupper($scan->interface ?? 'WLAN');
-                            $isWlan = $iface === 'WLAN';
+                            $ifaceLower = strtolower($scan->interface ?? 'wlan');
+                            $isWlan = str_contains($ifaceLower, 'wlan') || str_contains($ifaceLower, 'wifi') || str_contains($ifaceLower, 'wi-fi');
+                            $cleanIface = preg_replace('/[0-9]+/', '', $scan->interface ?? ($isWlan ? 'wlan' : 'eth'));
                             $sc     = $scan->score ?? 0;
                             $scC    = $sc>=90?'text-secondary':($sc>=75?'text-secondary-container':($sc>=60?'text-warning':'text-error'));
                             $kBadge = $sc>=90?'bg-green-100 text-green-700':($sc>=75?'bg-blue-100 text-blue-700':($sc>=60?'bg-yellow-100 text-yellow-700':'bg-red-100 text-red-700'));
@@ -142,7 +143,7 @@
                             <td class="px-lg py-md">
                                 <div class="font-bold text-secondary text-sm flex items-center gap-1">
                                     <span class="material-symbols-outlined text-[16px]">{{ $isWlan ? 'wifi' : 'ethernet' }}</span>
-                                    {{ $isWlan ? 'wlan0' : 'eth0' }}
+                                    {{ $cleanIface }}
                                 </div>
                                 <div class="text-xs text-on-surface-variant">{{ $isWlan ? ($scan->ssid ?? '—') : 'Gigabit Adapter' }}</div>
                             </td>

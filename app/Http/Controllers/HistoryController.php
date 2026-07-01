@@ -79,9 +79,18 @@ class HistoryController extends Controller
         $peakHour = $hourlyComparison->sortBy('avg_score')->first()?->hour;
 
         // ── Analisis: Interface Proportion ───────────────────────────
-        $wlanCount = Scan::where('interface', 'WLAN')->count();
-        $lanCount  = Scan::where('interface', 'LAN')->count();
-        $total     = $wlanCount + $lanCount;
+        $wlanCount = Scan::where(function($q) {
+            $q->where('interface', 'LIKE', 'wlan%')
+              ->orWhere('interface', 'LIKE', 'wifi%')
+              ->orWhere('interface', 'LIKE', 'wi-fi%')
+              ->orWhere('interface', 'LIKE', 'WLAN%')
+              ->orWhere('interface', 'LIKE', 'Wi-Fi%')
+              ->orWhereNull('interface')
+              ->orWhere('interface', '');
+        })->count();
+
+        $totalScans = Scan::count();
+        $lanCount   = max(0, $totalScans - $wlanCount);
 
         $interfaceComparison = [
             'wlan'    => ['count' => $wlanCount],
