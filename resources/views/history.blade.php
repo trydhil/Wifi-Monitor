@@ -270,56 +270,57 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
             {{-- Card 3: Interface Proportion --}}
-            <div class="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant shadow-sm flex flex-col justify-between">
-                <div>
-                    <h4 class="font-title-sm text-sm text-primary mb-md">Interface Proportion</h4>
-                    @php
-                        $wlanCount = $interfaceComparison['wlan']['count'] ?? 0;
-                        $lanCount  = $interfaceComparison['lan']['count']  ?? 0;
-                        $total2    = $wlanCount + $lanCount;
-                        $wlanPct   = $total2>0 ? round($wlanCount/$total2*100) : 0;
-                        $lanPct    = 100-$wlanPct;
-                        $wlanDash  = $total2>0 ? round($wlanPct/100*100.5,1) : 0;
-                    @endphp
-                    <div class="flex items-center gap-4">
-                        <div class="relative w-20 h-20 flex-shrink-0">
-                            <svg class="w-full h-full" viewBox="0 0 36 36" style="transform: rotate(-90deg)">
-                                <circle cx="18" cy="18" r="16" fill="none" stroke="#eceef0" stroke-width="4"/>
-                                <circle cx="18" cy="18" r="16" fill="none" stroke="#0051d5" stroke-width="4"
-                                        stroke-dasharray="{{ $wlanDash }} 100.5"/>
-                                <circle cx="18" cy="18" r="16" fill="none" stroke="#4cd7f6" stroke-width="4"
-                                        stroke-dasharray="{{ 100.5-$wlanDash }} 100.5"
+            <div class="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant shadow-sm flex flex-col h-full">
+                <h4 class="font-title-sm text-sm text-primary mb-md">Interface Proportion</h4>
+                @php
+                    $wlanCount = $interfaceComparison['wlan']['count'] ?? 0;
+                    $lanCount  = $interfaceComparison['lan']['count']  ?? 0;
+                    $total2    = $wlanCount + $lanCount;
+                    $wlanPct   = $total2>0 ? round($wlanCount/$total2*100) : 0;
+                    $lanPct    = 100-$wlanPct;
+                    $wlanDash  = $total2>0 ? round(($wlanPct/100)*100.53, 1) : 0;
+                @endphp
+                <div class="flex-1 flex items-center justify-center gap-xl py-sm">
+                    <div class="relative w-28 h-28 flex-shrink-0">
+                        <svg class="w-full h-full" viewBox="0 0 36 36" style="transform: rotate(-90deg)">
+                            <!-- Gray baseline circle -->
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="#eceef0" stroke-width="3.5"/>
+                            @if($total2 > 0)
+                                <!-- WLAN segment (Blue) -->
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#0051d5" stroke-width="3.5"
+                                        stroke-dasharray="{{ $wlanDash }} 100.53"/>
+                                <!-- LAN segment (Teal) -->
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#4cd7f6" stroke-width="3.5"
+                                        stroke-dasharray="{{ 100.53 - $wlanDash }} 100.53"
                                         stroke-dashoffset="{{ -$wlanDash }}"/>
-                            </svg>
-                            <div class="absolute inset-0 flex items-center justify-center font-bold text-sm text-primary">
-                                {{ $total2 }}
+                            @else
+                                <!-- Fallback WLAN circle when no scans -->
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#0051d5" stroke-width="3.5"
+                                        stroke-dasharray="100.53 100.53"/>
+                            @endif
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="font-display-lg text-xl font-bold text-primary leading-none">{{ $total2 }}</span>
+                            <span class="text-[9px] text-on-surface-variant font-medium tracking-wider uppercase mt-1">Scans</span>
+                        </div>
+                    </div>
+                    <div class="space-y-md text-xs select-none">
+                        <div class="flex items-center gap-3">
+                            <span class="w-3 h-3 rounded-full bg-secondary flex-shrink-0"></span>
+                            <div>
+                                <div class="font-bold text-primary text-sm leading-none mb-0.5">WLAN</div>
+                                <div class="text-[11px] text-on-surface-variant font-medium">{{ $wlanCount }} scans ({{ $total2 > 0 ? $wlanPct : 100 }}%)</div>
                             </div>
                         </div>
-                        <div class="space-y-sm text-xs">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
-                                <div>
-                                    <div class="font-semibold text-primary">WLAN</div>
-                                    <div class="text-[10px] text-on-surface-variant">{{ $wlanCount }} scans ({{ $wlanPct }}%)</div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim"></span>
-                                <div>
-                                    <div class="font-semibold text-primary">LAN</div>
-                                    <div class="text-[10px] text-on-surface-variant">{{ $lanCount }} scans ({{ $lanPct }}%)</div>
-                                </div>
+                        <div class="flex items-center gap-3">
+                            <span class="w-3 h-3 rounded-full bg-tertiary-fixed-dim flex-shrink-0"></span>
+                            <div>
+                                <div class="font-bold text-primary text-sm leading-none mb-0.5">LAN</div>
+                                <div class="text-[11px] text-on-surface-variant font-medium">{{ $lanCount }} scans ({{ $total2 > 0 ? $lanPct : 0 }}%)</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                @if(!empty($interfaceComparison['verdict']))
-                    <div class="mt-4 p-2 bg-green-50 text-green-800 border border-green-200 rounded-lg text-[11px] font-semibold flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]">check_circle</span>
-                        {{ $interfaceComparison['verdict'] }}
-                    </div>
-                @endif
             </div>
 
             {{-- Card 4: Weekly Trend --}}
