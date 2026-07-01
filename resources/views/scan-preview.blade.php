@@ -390,35 +390,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.classList.add('opacity-50', 'pointer-events-none');
             }
 
-            // Replace Detection Zone content with a premium holographic radar spinner
+            // Replace Detection Zone content with a premium holographic rotating squares spinner
             detectionZone.innerHTML = `
                 <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
                 
                 <div class="relative flex flex-col items-center justify-center w-full px-lg">
-                    <!-- Advanced Hologram Radar Rings -->
-                    <div class="relative w-32 h-32 mb-md flex items-center justify-center">
-                        <!-- Outer rotating dashed ring -->
-                        <div class="absolute inset-0 rounded-full border-2 border-dashed border-secondary/40 animate-[spin_10s_linear_infinite]"></div>
-                        <!-- Middle rotating solid scanner -->
-                        <div class="absolute inset-2 rounded-full border-2 border-secondary border-t-transparent animate-[spin_3s_linear_infinite]"></div>
-                        <!-- Inner opposite rotating dotted ring -->
-                        <div class="absolute inset-4 rounded-full border border-dotted border-secondary/50 animate-[spin_6s_linear_infinite_reverse]"></div>
+                    <!-- Advanced Hologram Rotating Squares (Tilted diamonds) -->
+                    <div class="relative w-36 h-36 mb-md flex items-center justify-center">
+                        <!-- Outer dashed square rotating -->
+                        <div class="absolute w-24 h-24 rounded-[1.5rem] border-2 border-dashed border-secondary/40 animate-[spin_12s_linear_infinite]"></div>
+                        <!-- Inner solid square rotating in reverse -->
+                        <div class="absolute w-24 h-24 rounded-[1.5rem] border-2 border-secondary animate-[spin_6s_linear_infinite_reverse]"></div>
                         <!-- Blurred glowing backdrop -->
-                        <div class="absolute inset-6 rounded-full bg-secondary/10 filter blur-md animate-pulse"></div>
-                        <!-- Core icon -->
-                        <span class="material-symbols-outlined text-secondary text-3xl font-bold animate-[pulse_1.5s_ease-in-out_infinite] z-10" style="font-variation-settings: 'FILL' 1;">radar</span>
-                    </div>
-                    
-                    <!-- Progress Percentage -->
-                    <div class="text-3xl font-bold text-primary tracking-tight mb-1" id="scan-progress-pct">0%</div>
-                    
-                    <!-- Progress Bar -->
-                    <div class="w-64 bg-surface-container-high rounded-full h-2 mb-sm overflow-hidden border border-outline-variant/30 relative">
-                        <div id="scan-progress-bar" class="bg-secondary h-full rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(0,102,255,0.5)]" style="width: 0%"></div>
+                        <div class="absolute w-12 h-12 rounded-full bg-secondary/15 filter blur-sm animate-pulse"></div>
+                        <!-- Core concentric targets -->
+                        <div class="relative z-10 w-12 h-12 rounded-full bg-surface-container border-2 border-secondary/80 flex items-center justify-center shadow-sm">
+                            <div class="w-8 h-8 rounded-full border border-secondary/60 flex items-center justify-center animate-pulse">
+                                <div class="w-4 h-4 rounded-full bg-secondary"></div>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Dynamic Status Text -->
-                    <div class="text-[11px] font-bold text-on-surface-variant tracking-wider uppercase" id="scan-progress-text">Mendeteksi Antarmuka Jaringan...</div>
+                    <div class="text-[11px] font-bold text-on-surface-variant tracking-wider uppercase mt-2" id="scan-progress-text">Mendeteksi Antarmuka Jaringan...</div>
                 </div>
             `;
             
@@ -455,8 +449,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 { limit: 100, text: "Menghitung Skor Kualitas Jaringan..." }
             ];
             
-            const pctEl = document.getElementById('scan-progress-pct');
-            const barEl = document.getElementById('scan-progress-bar');
             const txtEl = document.getElementById('scan-progress-text');
             
             const interval = setInterval(() => {
@@ -472,13 +464,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                // Update UI elements
-                pctEl.textContent = progress + '%';
-                barEl.style.width = progress + '%';
-                
                 // Update dynamic text
                 const textObj = progressTexts.find(pt => progress <= pt.limit);
-                if (textObj) {
+                if (textObj && txtEl) {
                     txtEl.textContent = textObj.text;
                 }
                 
