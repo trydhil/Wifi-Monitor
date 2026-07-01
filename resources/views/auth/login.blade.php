@@ -142,15 +142,7 @@
         
         {{-- Logo --}}
         <div class="relative z-10 flex items-center gap-3">
-            <svg width="40" height="40" viewBox="0 0 44 44" fill="none">
-                <ellipse cx="22" cy="24" rx="18" ry="11" stroke="#0051d5" stroke-width="2" fill="none"/>
-                <circle cx="22" cy="24" r="3" fill="#0ea5e9"/>
-                <path d="M17 21 Q22 16 27 21" stroke="#0ea5e9" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-                <path d="M14 18 Q22 11 30 18" stroke="#0ea5e9" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.6"/>
-                <rect x="28" y="10" width="3" height="6" rx="1" fill="#0051d5" opacity="0.9"/>
-                <rect x="32" y="8" width="3" height="8" rx="1" fill="#0051d5"/>
-                <rect x="36" y="6" width="3" height="10" rx="1" fill="#0051d5" opacity="0.8"/>
-            </svg>
+            <img class="h-10 w-10 object-contain rounded-md" src="{{ asset('images/ChatGPT Image 25 Jun 2026, 11.53.40.png') }}" alt="NETRA Logo">
             <div>
                 <h1 class="font-display-lg text-title-sm font-bold text-white tracking-widest leading-none">NETRA</h1>
                 <p class="text-[10px] text-on-primary-container tracking-wider uppercase mt-0.5">Network Intelligence</p>
@@ -206,10 +198,7 @@
             
             {{-- Mobile logo --}}
             <div class="flex md:hidden items-center gap-2 mb-6">
-                <svg width="28" height="28" viewBox="0 0 44 44" fill="none">
-                    <ellipse cx="22" cy="24" rx="18" ry="11" stroke="#0051d5" stroke-width="2" fill="none"/>
-                    <circle cx="22" cy="24" r="3" fill="#0ea5e9"/>
-                </svg>
+                <img class="h-8 w-8 object-contain rounded-md" src="{{ asset('images/ChatGPT Image 25 Jun 2026, 11.53.40.png') }}" alt="NETRA Logo">
                 <span class="font-bold text-lg tracking-wider">NETRA</span>
             </div>
 

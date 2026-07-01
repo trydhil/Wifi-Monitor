@@ -146,9 +146,12 @@
 
     <!-- Side Navigation Shell -->
     <aside class="w-sidebar-width h-screen fixed left-0 top-0 bg-primary flex flex-col py-md px-sm z-50">
-        <div class="mb-xl px-md">
-            <h1 class="font-display-lg text-display-lg font-bold text-secondary-fixed">NETRA</h1>
-            <p class="font-title-sm text-on-primary-container text-[12px] -mt-1 uppercase tracking-widest">Network Intelligence</p>
+        <div class="mb-xl px-md flex items-center gap-3">
+            <img class="h-8 w-8 object-contain rounded-md" src="{{ asset('images/ChatGPT Image 25 Jun 2026, 11.53.40.png') }}" alt="NETRA Logo">
+            <div>
+                <h1 class="font-display-lg text-title-sm font-bold text-secondary-fixed tracking-wider leading-none">NETRA</h1>
+                <p class="font-title-sm text-on-primary-container text-[9px] uppercase tracking-widest mt-0.5">Network Intelligence</p>
+            </div>
         </div>
         
         <nav class="flex-1 space-y-base">
