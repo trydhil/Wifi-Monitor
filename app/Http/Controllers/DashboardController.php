@@ -103,21 +103,35 @@ class DashboardController extends Controller
             $xml   = simplexml_load_string($response->body());
             $items = [];
 
-            foreach ($xml->entry as $entry) {
-                $link = '';
-                if (isset($entry->link)) {
-                    $link = (string)($entry->link['href'] ?? '');
+            if (isset($xml->channel->item)) {
+                foreach ($xml->channel->item as $item) {
+                    $items[] = [
+                        'title'       => (string)$item->title,
+                        'link'        => (string)$item->link,
+                        'pubDate'     => (string)$item->pubDate,
+                        'description' => strip_tags((string)$item->description),
+                        'image'       => null,
+                    ];
+
+                    if (count($items) >= 3) break;
                 }
+            } elseif (isset($xml->entry)) {
+                foreach ($xml->entry as $entry) {
+                    $link = '';
+                    if (isset($entry->link)) {
+                        $link = (string)($entry->link['href'] ?? '');
+                    }
 
-                $items[] = [
-                    'title'       => (string)$entry->title,
-                    'link'        => $link ?: (string)$entry->id,
-                    'pubDate'     => (string)$entry->updated,
-                    'description' => strip_tags((string)($entry->summary ?? $entry->content ?? '')),
-                    'image'       => null,
-                ];
+                    $items[] = [
+                        'title'       => (string)$entry->title,
+                        'link'        => $link ?: (string)$entry->id,
+                        'pubDate'     => (string)$entry->updated,
+                        'description' => strip_tags((string)($entry->summary ?? $entry->content ?? '')),
+                        'image'       => null,
+                    ];
 
-                if (count($items) >= 3) break;
+                    if (count($items) >= 3) break;
+                }
             }
 
             $updatedAt = now();
