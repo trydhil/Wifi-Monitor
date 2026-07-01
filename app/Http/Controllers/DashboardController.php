@@ -105,15 +105,27 @@ class DashboardController extends Controller
 
             if (isset($xml->channel->item)) {
                 foreach ($xml->channel->item as $item) {
+                    $image = null;
+                    if (isset($item->enclosure)) {
+                        $image = (string)$item->enclosure['url'];
+                    }
+                    if (!$image) {
+                        $ns = $item->getNamespaces(true);
+                        if (isset($ns['media'])) {
+                            $media = $item->children($ns['media']);
+                            $image = (string)($media->thumbnail['url'] ?? $media->content['url'] ?? '');
+                        }
+                    }
+
                     $items[] = [
                         'title'       => (string)$item->title,
                         'link'        => (string)$item->link,
                         'pubDate'     => (string)$item->pubDate,
                         'description' => strip_tags((string)$item->description),
-                        'image'       => null,
+                        'image'       => $image ?: null,
                     ];
 
-                    if (count($items) >= 3) break;
+                    if (count($items) >= 6) break;
                 }
             } elseif (isset($xml->entry)) {
                 foreach ($xml->entry as $entry) {
@@ -122,15 +134,25 @@ class DashboardController extends Controller
                         $link = (string)($entry->link['href'] ?? '');
                     }
 
+                    $image = null;
+                    if (isset($entry->link)) {
+                        foreach ($entry->link as $l) {
+                            if ((string)$l['rel'] === 'enclosure') {
+                                $image = (string)$l['href'];
+                                break;
+                            }
+                        }
+                    }
+
                     $items[] = [
                         'title'       => (string)$entry->title,
                         'link'        => $link ?: (string)$entry->id,
                         'pubDate'     => (string)$entry->updated,
                         'description' => strip_tags((string)($entry->summary ?? $entry->content ?? '')),
-                        'image'       => null,
+                        'image'       => $image ?: null,
                     ];
 
-                    if (count($items) >= 3) break;
+                    if (count($items) >= 6) break;
                 }
             }
 

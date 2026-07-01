@@ -240,75 +240,51 @@
         </div>
     </div>
 
-    <!-- 5. Berita Teknologi Grid -->
+    <!-- 5. Berita Teknologi Terbaru (Horizontal Carousel) -->
     <div class="mb-lg">
-        <h3 class="font-title-sm text-title-sm text-primary mb-md">Berita Teknologi Terbaru</h3>
-        @if(count($news) === 0)
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
-                <!-- Fallback News Card 1 -->
-                <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm group">
-                    <div class="h-40 overflow-hidden relative">
-                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCws4W7-mer8DzbPGHygbBS1yJBvzppHMpDe5XWsiUjvCI2U15_CS1hIAaGG9fOd38Wkf1-AFvl8P1NBa13xrO3s-Kl6ojhekehcmb-V13LG3BzIW0OmeooScUG7lJ__FL9de3fGKQv0RXJqf4_8R-XpsdhsC5zTlSsYO_te_tVT29BelbfCuVhDfN0DeQT0-So0tXB7sUAePzTXm9fiiTBCVEbuYGdbUabDCiK2BEYsbczs6nhMuF8H466rg3s4ai1xwVdmkVxlng">
-                        <div class="absolute top-md left-md bg-secondary text-white text-[10px] px-2 py-1 font-bold rounded">DETIK INET</div>
-                    </div>
-                    <div class="p-md">
-                        <h4 class="font-title-sm text-body-md text-primary line-clamp-2 mb-xs">Eksplorasi Teknologi 6G: Kecepatan Tanpa Batas Masa Depan</h4>
-                        <p class="text-body-sm text-on-surface-variant line-clamp-2">Para peneliti mulai menguji coba frekuensi terahertz untuk implementasi jaringan 6G...</p>
-                        <a class="inline-block mt-md text-secondary font-bold text-body-sm hover:underline" href="#">Baca Selengkapnya</a>
-                    </div>
-                </div>
-                <!-- Fallback News Card 2 -->
-                <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm group">
-                    <div class="h-40 overflow-hidden relative">
-                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4_i2CUX-AR_a5VQCQ_21GnyUTD6TOgtsNr1KKI3ZLWPajOoCxhvDtHz1LG7JfC8FPPEHlV2tP53a_p7KE3AoBUB5Dy0WgnQWn-DbpC9l-Xj3IB8dRwhEei7IvkcEI82ll8-TarOJa0AOvLSpuKZkLyyNDsnc_8B48yojfha6XkkrpyADf2qTWDF-kdUnFip6oqKkAYuaxft-lv3ciNmDLx06n-2kqz4y-YMS0pUBHx7Qx7GVaO9knWkkz_tdHHNtGgiQbT_L9lMc">
-                        <div class="absolute top-md left-md bg-secondary text-white text-[10px] px-2 py-1 font-bold rounded">SECURITY</div>
-                    </div>
-                    <div class="p-md">
-                        <h4 class="font-title-sm text-body-md text-primary line-clamp-2 mb-xs">Tantangan Cyber Security 2024: AI sebagai Senjata Baru</h4>
-                        <p class="text-body-sm text-on-surface-variant line-clamp-2">Ancaman ransomware semakin canggih dengan integrasi kecerdasan buatan...</p>
-                        <a class="inline-block mt-md text-secondary font-bold text-body-sm hover:underline" href="#">Baca Selengkapnya</a>
-                    </div>
-                </div>
-                <!-- Fallback News Card 3 -->
-                <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm group">
-                    <div class="h-40 overflow-hidden relative">
-                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdvTyQNHmEXl5yhX5kv5rVkQWMF4POTGVwe4F2QMOpv5f52c0cYuLGh4vJET_KS0Y5zlc1-AywvwQBQdZ7zmkwpKnR-s8Cflc2axDttiLKjGzM6-kYLTjF6QUcjx7CH7oGFSbP8Jkzp4Ew5ODW-gs4mtjFKtVRVpr-zc-rfMFb27-75QIjly8x5pb8Xc9OnBqI-TRRSiMSs0JXIpo3Kusn5ijKvyz39qa7JitxAsmFrfZO6xakJHsHiHMjSyd6P8VTZrChQOTRZR4">
-                        <div class="absolute top-md left-md bg-secondary text-white text-[10px] px-2 py-1 font-bold rounded">CLOUD</div>
-                    </div>
-                    <div class="p-md">
-                        <h4 class="font-title-sm text-body-md text-primary line-clamp-2 mb-xs">Cloud Infrastructure: Skalabilitas Bisnis di Era Digital</h4>
-                        <p class="text-body-sm text-on-surface-variant line-clamp-2">Penyedia layanan cloud terus memperluas kapasitas server global untuk mendukung demand...</p>
-                        <a class="inline-block mt-md text-secondary font-bold text-body-sm hover:underline" href="#">Baca Selengkapnya</a>
-                    </div>
-                </div>
+        <div class="flex justify-between items-center mb-md select-none">
+            <h3 class="font-title-sm text-title-sm text-primary">Berita Teknologi Terbaru</h3>
+            <div class="flex gap-xs">
+                <button onclick="document.getElementById('news-carousel').scrollBy({ left: -360, behavior: 'smooth' })" class="w-8 h-8 rounded-full border border-outline-variant flex items-center justify-center bg-surface-container-lowest hover:bg-surface-container-high active:scale-95 transition-all text-on-surface-variant cursor-pointer" title="Geser Kiri">
+                    <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                </button>
+                <button onclick="document.getElementById('news-carousel').scrollBy({ left: 360, behavior: 'smooth' })" class="w-8 h-8 rounded-full border border-outline-variant flex items-center justify-center bg-surface-container-lowest hover:bg-surface-container-high active:scale-95 transition-all text-on-surface-variant cursor-pointer" title="Geser Kanan">
+                    <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                </button>
             </div>
-        @else
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
-                @foreach($news as $index => $item)
-                    @php
-                        $categories = ['NETWORKS', 'SECURITY', 'CLOUD'];
-                        $images = [
-                            'https://lh3.googleusercontent.com/aida-public/AB6AXuCws4W7-mer8DzbPGHygbBS1yJBvzppHMpDe5XWsiUjvCI2U15_CS1hIAaGG9fOd38Wkf1-AFvl8P1NBa13xrO3s-Kl6ojhekehcmb-V13LG3BzIW0OmeooScUG7lJ__FL9de3fGKQv0RXJqf4_8R-XpsdhsC5zTlSsYO_te_tVT29BelbfCuVhDfN0DeQT0-So0tXB7sUAePzTXm9fiiTBCVEbuYGdbUabDCiK2BEYsbczs6nhMuF8H466rg3s4ai1xwVdmkVxlng',
-                            'https://lh3.googleusercontent.com/aida-public/AB6AXuD4_i2CUX-AR_a5VQCQ_21GnyUTD6TOgtsNr1KKI3ZLWPajOoCxhvDtHz1LG7JfC8FPPEHlV2tP53a_p7KE3AoBUB5Dy0WgnQWn-DbpC9l-Xj3IB8dRwhEei7IvkcEI82ll8-TarOJa0AOvLSpuKZkLyyNDsnc_8B48yojfha6XkkrpyADf2qTWDF-kdUnFip6oqKkAYuaxft-lv3ciNmDLx06n-2kqz4y-YMS0pUBHx7Qx7GVaO9knWkkz_tdHHNtGgiQbT_L9lMc',
-                            'https://lh3.googleusercontent.com/aida-public/AB6AXuCdvTyQNHmEXl5yhX5kv5rVkQWMF4POTGVwe4F2QMOpv5f52c0cYuLGh4vJET_KS0Y5zlc1-AywvwQBQdZ7zmkwpKnR-s8Cflc2axDttiLKjGzM6-kYLTjF6QUcjx7CH7oGFSbP8Jkzp4Ew5ODW-gs4mtjFKtVRVpr-zc-rfMFb27-75QIjly8x5pb8Xc9OnBqI-TRRSiMSs0JXIpo3Kusn5ijKvyz39qa7JitxAsmFrfZO6xakJHsHiHMjSyd6P8VTZrChQOTRZR4'
-                        ];
-                        $category = $categories[$index % 3];
-                        $imgUrl = $item['image'] ?? $images[$index % 3];
-                    @endphp
-                    <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm group">
-                        <div class="h-40 overflow-hidden relative">
-                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $imgUrl }}" alt="{{ $item['title'] }}">
-                            <div class="absolute top-md left-md bg-secondary text-white text-[10px] px-2 py-1 font-bold rounded">{{ $category }}</div>
-                        </div>
-                        <div class="p-md">
-                            <h4 class="font-title-sm text-body-md text-primary line-clamp-2 mb-xs">{{ $item['title'] }}</h4>
+        </div>
+
+        <div id="news-carousel" class="flex overflow-x-auto gap-lg pb-md scrollbar-none snap-x snap-mandatory scroll-smooth -mx-4 px-4 lg:mx-0 lg:px-0">
+            @forelse($news as $index => $item)
+                @php
+                    $categories = ['NETWORKS', 'SECURITY', 'CLOUD'];
+                    $images = [
+                        'https://lh3.googleusercontent.com/aida-public/AB6AXuCws4W7-mer8DzbPGHygbBS1yJBvzppHMpDe5XWsiUjvCI2U15_CS1hIAaGG9fOd38Wkf1-AFvl8P1NBa13xrO3s-Kl6ojhekehcmb-V13LG3BzIW0OmeooScUG7lJ__FL9de3fGKQv0RXJqf4_8R-XpsdhsC5zTlSsYO_te_tVT29BelbfCuVhDfN0DeQT0-So0tXB7sUAePzTXm9fiiTBCVEbuYGdbUabDCiK2BEYsbczs6nhMuF8H466rg3s4ai1xwVdmkVxlng',
+                        'https://lh3.googleusercontent.com/aida-public/AB6AXuD4_i2CUX-AR_a5VQCQ_21GnyUTD6TOgtsNr1KKI3ZLWPajOoCxhvDtHz1LG7JfC8FPPEHlV2tP53a_p7KE3AoBUB5Dy0WgnQWn-DbpC9l-Xj3IB8dRwhEei7IvkcEI82ll8-TarOJa0AOvLSpuKZkLyyNDsnc_8B48yojfha6XkkrpyADf2qTWDF-kdUnFip6oqKkAYuaxft-lv3ciNmDLx06n-2kqz4y-YMS0pUBHx7Qx7GVaO9knWkkz_tdHHNtGgiQbT_L9lMc',
+                        'https://lh3.googleusercontent.com/aida-public/AB6AXuCdvTyQNHmEXl5yhX5kv5rVkQWMF4POTGVwe4F2QMOpv5f52c0cYuLGh4vJET_KS0Y5zlc1-AywvwQBQdZ7zmkwpKnR-s8Cflc2axDttiLKjGzM6-kYLTjF6QUcjx7CH7oGFSbP8Jkzp4Ew5ODW-gs4mtjFKtVRVpr-zc-rfMFb27-75QIjly8x5pb8Xc9OnBqI-TRRSiMSs0JXIpo3Kusn5ijKvyz39qa7JitxAsmFrfZO6xakJHsHiHMjSyd6P8VTZrChQOTRZR4'
+                    ];
+                    $category = $categories[$index % 3];
+                    $imgUrl = $item['image'] ?? $images[$index % 3];
+                @endphp
+                <div class="w-[280px] md:w-[360px] shrink-0 snap-start bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+                    <div class="h-40 overflow-hidden relative">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $imgUrl }}" alt="{{ $item['title'] }}" onerror="this.src='{{ $images[$index % 3] }}'">
+                        <div class="absolute top-md left-md bg-secondary text-white text-[10px] px-2 py-1 font-bold rounded">{{ $category }}</div>
+                    </div>
+                    <div class="p-md flex flex-col justify-between h-[160px]">
+                        <div>
+                            <h4 class="font-title-sm text-body-md text-primary line-clamp-2 mb-xs" title="{{ $item['title'] }}">{{ $item['title'] }}</h4>
                             <p class="text-body-sm text-on-surface-variant line-clamp-2">{{ $item['description'] }}</p>
-                            <a class="inline-block mt-md text-secondary font-bold text-body-sm hover:underline" href="{{ $item['link'] }}" target="_blank">Baca Selengkapnya</a>
                         </div>
+                        <a class="inline-block mt-md text-secondary font-bold text-body-sm hover:underline" href="{{ $item['link'] }}" target="_blank">Baca Selengkapnya</a>
                     </div>
-                @endforeach
-            </div>
-        @endif
+                </div>
+            @empty
+                <div class="w-full bg-surface-container-lowest rounded-xl border border-outline-variant p-lg text-center text-on-surface-variant">
+                    Belum ada data berita realtime
+                </div>
+            @endforelse
+        </div>
     </div>
 
     <!-- 6. Scan Terakhir Table -->
