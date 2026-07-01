@@ -3,15 +3,10 @@
 @section('title', 'System Configuration')
 
 @section('topbar-action')
-<div class="flex items-center gap-2">
-    <a href="{{ route('dashboard') }}" class="bg-surface-container-high hover:bg-surface-container-highest text-primary px-md py-2 rounded-lg font-title-sm text-sm transition-all">
-        Batal
-    </a>
-    <button type="submit" form="settingsForm" class="bg-secondary text-on-secondary px-md py-2 rounded-lg font-title-sm text-sm hover:opacity-90 active:scale-95 transition-all flex items-center gap-xs shadow-sm">
-        <span class="material-symbols-outlined text-[18px]">save</span>
-        Simpan Konfigurasi
-    </button>
-</div>
+<button type="button" onclick="window.location.reload();" class="flex items-center gap-xs bg-secondary text-on-secondary px-md py-1.5 rounded-full font-title-sm text-sm hover:opacity-90 transition-all active:scale-95 shadow-sm">
+    <span class="material-symbols-outlined text-[18px]">refresh</span>
+    Refresh Data
+</button>
 @endsection
 
 @section('content')
@@ -195,19 +190,13 @@
                         </div>
                         <div>
                             <label class="font-label-caps text-on-surface-variant block mb-sm">COLUMN CHECKLIST</label>
-                            <div class="grid grid-cols-2 gap-md p-md bg-surface-container-low rounded-lg text-sm">
-                                <label class="flex items-center gap-sm font-body-sm cursor-pointer text-primary">
-                                    <input checked class="rounded border-outline-variant text-secondary focus:ring-secondary/20 w-4 h-4" type="checkbox"> Timestamp
-                                </label>
-                                <label class="flex items-center gap-sm font-body-sm cursor-pointer text-primary">
-                                    <input checked class="rounded border-outline-variant text-secondary focus:ring-secondary/20 w-4 h-4" type="checkbox"> IP Address
-                                </label>
-                                <label class="flex items-center gap-sm font-body-sm cursor-pointer text-primary">
-                                    <input checked class="rounded border-outline-variant text-secondary focus:ring-secondary/20 w-4 h-4" type="checkbox"> Latency
-                                </label>
-                                <label class="flex items-center gap-sm font-body-sm cursor-pointer text-primary">
-                                    <input checked class="rounded border-outline-variant text-secondary focus:ring-secondary/20 w-4 h-4" type="checkbox"> Signal Strength
-                                </label>
+                            <div class="grid grid-cols-3 sm:grid-cols-4 gap-sm p-md bg-surface-container-low rounded-lg text-xs">
+                                @foreach(['Tanggal','Jam','Interface','SSID','Download','Upload','Ping','Signal','Score','Kategori'] as $col)
+                                    <label class="flex items-center gap-2 cursor-pointer select-none text-primary">
+                                        <input type="checkbox" checked class="rounded border-outline-variant text-secondary focus:ring-secondary/20 w-4 h-4">
+                                        <span class="font-medium text-primary">{{ $col }}</span>
+                                    </label>
+                                @endforeach
                             </div>
                         </div>
                         <div class="pt-md border-t border-outline-variant/30 flex justify-between items-center text-sm font-medium">
