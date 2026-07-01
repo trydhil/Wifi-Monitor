@@ -133,59 +133,37 @@
 <body class="min-h-screen">
 <main class="flex min-h-screen flex-col md:flex-row">
     <!-- Left Section (40%) -->
-    <section class="w-full md:w-[40%] bg-[#0d1117] flex flex-col justify-between p-lg relative overflow-hidden">
+    <section class="w-full md:w-[40%] bg-[#0d1117] flex flex-col justify-center p-lg relative overflow-hidden">
         <!-- Decorative Atmosphere -->
         <div class="absolute inset-0 opacity-10 pointer-events-none">
             <div class="absolute top-0 right-0 w-96 h-96 bg-secondary-container rounded-full blur-[120px] -mr-48 -mt-48"></div>
             <div class="absolute bottom-0 left-0 w-96 h-96 bg-tertiary-container rounded-full blur-[120px] -ml-48 -mb-48"></div>
         </div>
         
-        {{-- Logo --}}
-        <div class="relative z-10 flex items-center gap-3">
-            <img class="h-10 w-10 object-contain rounded-md" src="{{ asset('images/ChatGPT Image 25 Jun 2026, 11.53.40.png') }}" alt="NETRA Logo">
-            <div>
-                <h1 class="font-display-lg text-title-sm font-bold text-white tracking-widest leading-none">NETRA</h1>
-                <p class="text-[10px] text-on-primary-container tracking-wider uppercase mt-0.5">Network Intelligence</p>
-            </div>
-        </div>
-
-        <div class="relative z-10 my-auto py-12">
-            <h2 class="font-display-lg text-display-lg text-white mb-2 leading-tight">Network Intelligence.<br>Real-time Awareness.</h2>
-            <p class="font-body-md text-on-primary-container mb-8">Sistem monitoring kualitas jaringan WiFi & LAN<br>Polrestabes Makassar.</p>
+        <div class="relative z-10 text-center py-12">
+            <img class="w-[260px] md:w-[300px] h-auto object-contain mx-auto mb-6" src="{{ asset('images/ChatGPT Image 25 Jun 2026, 11.53.40.png') }}" alt="NETRA Logo">
+            <h2 class="font-display-lg text-[16px] md:text-[18px] text-white font-semibold mb-8 tracking-wide">Network Intelligence. Real-time Awareness.</h2>
             
-            <div class="space-y-md text-left w-full max-w-xs">
-                <div class="flex items-start space-x-md group feature-item">
-                    <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-secondary border border-outline-variant/10 group-hover:bg-secondary group-hover:text-white transition-all flex-shrink-0">
+            <div class="space-y-md text-left w-full max-w-[260px] md:max-w-[280px] mx-auto">
+                <div class="flex items-center space-x-md group feature-item">
+                    <div class="w-10 h-10 rounded-lg bg-[#161b22] flex items-center justify-center text-secondary border border-outline-variant/10 group-hover:bg-secondary group-hover:text-white transition-all flex-shrink-0">
                         <span class="material-symbols-outlined">wifi</span>
                     </div>
-                    <div>
-                        <h4 class="font-title-sm text-sm text-white leading-tight">Monitoring Real-time</h4>
-                        <p class="text-body-sm text-on-primary-container opacity-85 mt-0.5">Pantau kualitas jaringan WLAN & LAN otomatis tiap jam dari setiap PC admin.</p>
-                    </div>
+                    <span class="font-body-md text-body-md text-on-primary-container">Real-time WIFI & LAN monitoring</span>
                 </div>
-                <div class="flex items-start space-x-md group feature-item">
-                    <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-secondary border border-outline-variant/10 group-hover:bg-secondary group-hover:text-white transition-all flex-shrink-0">
+                <div class="flex items-center space-x-md group feature-item">
+                    <div class="w-10 h-10 rounded-lg bg-[#161b22] flex items-center justify-center text-secondary border border-outline-variant/10 group-hover:bg-secondary group-hover:text-white transition-all flex-shrink-0">
                         <span class="material-symbols-outlined">analytics</span>
                     </div>
-                    <div>
-                        <h4 class="font-title-sm text-sm text-white leading-tight">5 Standar Penilaian</h4>
-                        <p class="text-body-sm text-on-primary-container opacity-85 mt-0.5">ITU-T, MOS, Ookla, Polrestabes, dan Custom — bandingkan skor berbagai perspektif.</p>
-                    </div>
+                    <span class="font-body-md text-body-md text-on-primary-container">Multi-standard network scoring</span>
                 </div>
-                <div class="flex items-start space-x-md group feature-item">
-                    <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-secondary border border-outline-variant/10 group-hover:bg-secondary group-hover:text-white transition-all flex-shrink-0">
+                <div class="flex items-center space-x-md group feature-item">
+                    <div class="w-10 h-10 rounded-lg bg-[#161b22] flex items-center justify-center text-secondary border border-outline-variant/10 group-hover:bg-secondary group-hover:text-white transition-all flex-shrink-0">
                         <span class="material-symbols-outlined">admin_panel_settings</span>
                     </div>
-                    <div>
-                        <h4 class="font-title-sm text-sm text-white leading-tight">Admin Only Access</h4>
-                        <p class="text-body-sm text-on-primary-container opacity-85 mt-0.5">Akses terbatas untuk personel Polrestabes Makassar yang berwenang.</p>
-                    </div>
+                    <span class="font-body-md text-body-md text-on-primary-container">Secure admin-only access</span>
                 </div>
             </div>
-        </div>
-
-        <div class="relative z-10 text-[11px] text-on-primary-container opacity-60">
-            © {{ date('Y') }} NETRA — Polrestabes Makassar
         </div>
         
         <!-- Decorative Grid Pattern -->
@@ -225,7 +203,7 @@
                                 <span class="material-symbols-outlined text-outline text-[20px]">mail</span>
                             </div>
                             <input class="block w-full pl-11 pr-md py-md bg-surface-container text-on-surface border border-outline-variant rounded focus:ring-0 focus:border-secondary transition-colors font-body-md text-body-md" 
-                                   id="email" name="email" placeholder="admin@polrestabes.go.id" required autofocus autocomplete="email" type="email" value="{{ old('email') }}">
+                                   id="email" name="email" placeholder="it.admin@netra.network" required autofocus autocomplete="email" type="email" value="{{ old('email') }}">
                         </div>
                     </div>
                     <!-- Password Field -->
