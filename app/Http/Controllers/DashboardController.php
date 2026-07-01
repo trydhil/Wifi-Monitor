@@ -88,7 +88,7 @@ class DashboardController extends Controller
     private function fetchNews(): array
     {
         $cacheKey = 'netra_news_global';
-        $ttl      = now()->addHours(4);
+        $ttl      = now()->addHours(2);
         $cached   = Cache::get($cacheKey);
 
         if ($cached) {
@@ -103,8 +103,29 @@ class DashboardController extends Controller
             $xml   = simplexml_load_string($response->body());
             $items = [];
 
+            $allowedKeywords = [
+                'wifi', 'wi-fi', 'network', 'telecom', 'internet', 'security', 'cyber', 'ransomware',
+                'vulnerability', 'cloud', 'server', 'data center', 'datacenter', 'outage', 'broadband',
+                'fiber', 'satellite', 'cisco', 'vmware', 'broadcom', 'connectivity', 'router', '5g',
+                '6g', 'telecommunication', 'ip address', 'dns', 'bgp', 'lan', 'wlan', 'ethernet'
+            ];
+
             if (isset($xml->channel->item)) {
                 foreach ($xml->channel->item as $item) {
+                    $title = strtolower((string)$item->title);
+                    $desc = strtolower((string)$item->description);
+                    $category = isset($item->category) ? strtolower((string)$item->category) : '';
+
+                    $matches = false;
+                    foreach ($allowedKeywords as $keyword) {
+                        if (str_contains($title, $keyword) || str_contains($desc, $keyword) || str_contains($category, $keyword)) {
+                            $matches = true;
+                            break;
+                        }
+                    }
+
+                    if (!$matches) continue;
+
                     $image = null;
                     if (isset($item->enclosure)) {
                         $image = (string)$item->enclosure['url'];
@@ -129,9 +150,22 @@ class DashboardController extends Controller
                 }
             } elseif (isset($xml->entry)) {
                 foreach ($xml->entry as $entry) {
+                    $title = strtolower((string)$entry->title);
+                    $desc = strtolower((string)($entry->summary ?? $entry->content ?? ''));
+
+                    $matches = false;
+                    foreach ($allowedKeywords as $keyword) {
+                        if (str_contains($title, $keyword) || str_contains($desc, $keyword)) {
+                            $matches = true;
+                            break;
+                        }
+                    }
+
+                    if (!$matches) continue;
+
                     $link = '';
                     if (isset($entry->link)) {
-                        $link = (string)($entry->link['href'] ?? '');
+                        $link = (string)$entry->link['href'] ?? '';
                     }
 
                     $image = null;
@@ -165,5 +199,4 @@ class DashboardController extends Controller
             return [[], null];
         }
     }
-
 }
