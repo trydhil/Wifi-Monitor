@@ -3,12 +3,21 @@
 namespace Tests\Feature;
 
 use App\Models\Scan;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ScanManualTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected $user;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->user = User::factory()->create();
+    }
 
     #[\PHPUnit\Framework\Attributes\Test]
     public function halaman_scan_manual_dapat_diakses()
@@ -17,11 +26,12 @@ class ScanManualTest extends TestCase
             '*' => \Illuminate\Support\Facades\Http::response([
                 'ssid' => 'WiFi-Test', 'download' => 48.5,
                 'upload' => 12.3, 'ping' => 14, 'signal' => -55,
+                'interface' => 'WLAN',
             ], 200),
         ]);
 
-        $response = $this->get(route('scan.manual'));
-        $this->assertContains($response->status(), [200, 302]);
+        $response = $this->actingAs($this->user)->get(route('scan.manual'));
+        $response->assertStatus(200);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
@@ -31,10 +41,11 @@ class ScanManualTest extends TestCase
             '*' => \Illuminate\Support\Facades\Http::response([
                 'ssid' => 'WiFi-Test', 'download' => 30, 'upload' => 10,
                 'ping' => 20, 'signal' => -60,
+                'interface' => 'WLAN',
             ], 200),
         ]);
 
-        $this->get(route('scan.manual'));
+        $this->actingAs($this->user)->get(route('scan.manual'));
         $this->assertDatabaseCount('scans', 0);
     }
 
@@ -45,20 +56,18 @@ class ScanManualTest extends TestCase
             '*' => \Illuminate\Support\Facades\Http::response([
                 'ssid' => 'WiFi-Kantor', 'download' => 50, 'upload' => 20,
                 'ping' => 10, 'signal' => -45,
+                'interface' => 'WLAN',
             ], 200),
         ]);
 
-        $response = $this->get(route('scan.manual'));
+        $response = $this->actingAs($this->user)->get(route('scan.manual'));
+        $response->assertStatus(200);
 
-        if ($response->status() === 200) {
-            // Cek salah satu nama variabel yang mungkin dipakai di controller
-            $hasResult = $response->viewData('result') !== null
-                      || $response->viewData('data') !== null
-                      || $response->viewData('scan') !== null;
-            $this->assertTrue($hasResult, 'View tidak punya variabel hasil scan (result/data/scan)');
-        } else {
-            // Redirect = ok, tidak crash
-            $this->assertTrue(true);
-        }
+        // Cek salah satu nama variabel yang dipakai di controller
+        $viewData = $response->viewData();
+        $hasResult = isset($viewData['result'])
+                  || isset($viewData['data'])
+                  || isset($viewData['scan']);
+        $this->assertTrue($hasResult, 'View tidak punya variabel hasil scan (result/data/scan)');
     }
 }

@@ -3,12 +3,21 @@
 namespace Tests\Feature;
 
 use App\Models\Scan;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class RiwayatExportTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected $user;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->user = User::factory()->create();
+    }
 
     // ════════════════════════════════════════════════════════════════════════
     //  RIWAYAT & FILTER
@@ -17,7 +26,7 @@ class RiwayatExportTest extends TestCase
     #[\PHPUnit\Framework\Attributes\Test]
     public function halaman_riwayat_terbuka_dan_return_200()
     {
-        $response = $this->get(route('history'));
+        $response = $this->actingAs($this->user)->get(route('history'));
         $response->assertStatus(200);
     }
 
@@ -26,7 +35,7 @@ class RiwayatExportTest extends TestCase
     {
         Scan::factory()->count(3)->create();
 
-        $response = $this->get(route('history'));
+        $response = $this->actingAs($this->user)->get(route('history'));
         $response->assertStatus(200);
 
         $data = $response->viewData('scans')
@@ -43,7 +52,7 @@ class RiwayatExportTest extends TestCase
         Scan::factory()->create(['ssid' => 'WiFi-B']);
         Scan::factory()->create(['ssid' => 'WiFi-A']);
 
-        $response = $this->get(route('history', ['ssid' => 'WiFi-A']));
+        $response = $this->actingAs($this->user)->get(route('history', ['ssid' => 'WiFi-A']));
         $response->assertStatus(200);
 
         $data = $response->viewData('scans')
@@ -55,11 +64,20 @@ class RiwayatExportTest extends TestCase
     #[\PHPUnit\Framework\Attributes\Test]
     public function filter_kategori_mengembalikan_data_yang_sesuai()
     {
-        Scan::factory()->create(['kategori' => 'Baik']);
-        Scan::factory()->create(['kategori' => 'Buruk']);
-        Scan::factory()->create(['kategori' => 'Baik']);
+        // Gunakan metrik yang valid agar hasil perhitungan ulang konsisten
+        // Baik: download=20, upload=10, ping=15, signal=-40 -> Skor ~84
+        Scan::factory()->create([
+            'download' => 20, 'upload' => 10, 'ping' => 15, 'signal' => -40
+        ]);
+        // Buruk: download=1, upload=1, ping=200, signal=-95 -> Skor ~5
+        Scan::factory()->create([
+            'download' => 1, 'upload' => 1, 'ping' => 200, 'signal' => -95
+        ]);
+        Scan::factory()->create([
+            'download' => 20, 'upload' => 10, 'ping' => 15, 'signal' => -40
+        ]);
 
-        $response = $this->get(route('history', ['kategori' => 'Baik']));
+        $response = $this->actingAs($this->user)->get(route('history', ['kategori' => 'Baik']));
         $response->assertStatus(200);
 
         $data = $response->viewData('scans')
@@ -82,9 +100,10 @@ class RiwayatExportTest extends TestCase
             'ssid'       => 'WiFi-Baru',
         ]);
 
-        $response = $this->get(route('history', [
-            'dari'   => now()->subDays(1)->toDateString(),
-            'sampai' => now()->toDateString(),
+        // Gunakan parameter 'tanggal_awal' dan 'tanggal_akhir' yang sesuai dengan HistoryController
+        $response = $this->actingAs($this->user)->get(route('history', [
+            'tanggal_awal'  => now()->subDays(1)->toDateString(),
+            'tanggal_akhir' => now()->toDateString(),
         ]));
 
         $response->assertStatus(200);
@@ -97,7 +116,7 @@ class RiwayatExportTest extends TestCase
     #[\PHPUnit\Framework\Attributes\Test]
     public function riwayat_kosong_tidak_crash()
     {
-        $response = $this->get(route('history'));
+        $response = $this->actingAs($this->user)->get(route('history'));
         $response->assertStatus(200);
     }
 
@@ -110,8 +129,8 @@ class RiwayatExportTest extends TestCase
     {
         Scan::factory()->count(3)->create();
 
-        // Pakai withoutExceptionHandling supaya error asli kelihatan
-        $response = $this->get(route('export.excel'));
+        // Pakai actingAs agar tidak diarahkan ke login
+        $response = $this->actingAs($this->user)->get(route('export.excel'));
 
         // BinaryFileResponse tidak punya ->status(), pakai getStatusCode()
         $this->assertContains($response->getStatusCode(), [200, 302]);
@@ -122,7 +141,7 @@ class RiwayatExportTest extends TestCase
     {
         Scan::factory()->count(3)->create();
 
-        $response = $this->get(route('export.excel'));
+        $response = $this->actingAs($this->user)->get(route('export.excel'));
 
         if ($response->getStatusCode() === 200) {
             $contentType = $response->headers->get('Content-Type');
@@ -139,7 +158,7 @@ class RiwayatExportTest extends TestCase
     #[\PHPUnit\Framework\Attributes\Test]
     public function export_excel_saat_database_kosong_tidak_crash()
     {
-        $response = $this->get(route('export.excel'));
+        $response = $this->actingAs($this->user)->get(route('export.excel'));
         $this->assertContains($response->getStatusCode(), [200, 302]);
     }
 }

@@ -1,208 +1,303 @@
 @extends('layouts.app')
 
-@section('title', 'Hasil Scan Manual')
+@section('title', 'Scan Manual')
+
+@section('topbar-action')
+<a href="{{ route('dashboard') }}" class="flex items-center gap-2 bg-surface-container-high text-primary px-md py-2 rounded-lg font-title-sm text-sm hover:opacity-90 active:scale-95 transition-all">
+    <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+    Kembali ke Dashboard
+</a>
+@endsection
 
 @section('content')
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <div>
-        <h1 class="h2 mb-0">Hasil Scan Manual</h1>
-        <small class="text-muted">
-            Standar penilaian aktif:
-            <span class="badge bg-primary ms-1">
-                {{ collect($standards)->firstWhere('key', $activeKey)['label'] ?? $activeKey }}
-            </span>
-        </small>
-    </div>
-    <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i>Dashboard
-    </a>
-</div>
-
-{{-- ===== PILIH STANDAR ===== --}}
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body py-2">
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-            {{-- Ganti standar: TIDAK scan ulang, cuma hitung ulang skor --}}
-            <form method="GET" action="{{ route('scan.manual.standar') }}" class="d-flex align-items-center gap-3 flex-wrap mb-0">
-                <label class="form-label mb-0 fw-semibold text-nowrap">
-                    <i class="bi bi-sliders me-1 text-primary"></i>Standar Penilaian:
-                </label>
-                <select name="standar" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
-                    @foreach($standards as $std)
-                        <option value="{{ $std['key'] }}" {{ $activeKey === $std['key'] ? 'selected' : '' }}>
-                            {{ $std['label'] }}
-                        </option>
-                    @endforeach
-                </select>
-                <small class="text-muted fst-italic">
-                    {{ collect($standards)->firstWhere('key', $activeKey)['deskripsi'] ?? '' }}
-                </small>
-            </form>
-
-            {{-- Scan ulang: jalankan agent.py lagi (±10-60 detik) --}}
-            <form method="GET" action="{{ route('scan.manual') }}" class="mb-0 ms-auto">
-                <input type="hidden" name="standar" value="{{ $activeKey }}">
-                <button type="submit" class="btn btn-primary btn-sm">
-                    <i class="bi bi-arrow-repeat me-1"></i>Scan Ulang
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-
-@if(isset($scan))
-<div class="row g-4">
-
-    {{-- ===== HASIL SCAN ===== --}}
-    <div class="col-md-7">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-primary text-white">
-                <i class="bi {{ ($scan['interface'] ?? 'WLAN') === 'LAN' ? 'bi-ethernet' : 'bi-wifi' }} me-2"></i>
-                Hasil Scan:
-                {{ $scan['interface'] === 'WLAN' ? ($scan['ssid'] ?? 'Tidak diketahui') : 'LAN (Ethernet)' }}
-                <span class="badge bg-white text-primary ms-2 float-end">
-                    {{ strtoupper($scan['interface'] ?? 'WLAN') }}
+<div class="p-lg flex gap-lg max-w-container-max mx-auto w-full flex-1 flex-col lg:flex-row">
+    <!-- Left Column (58%) -->
+    <div class="w-full lg:w-[58%] space-y-lg">
+        <section class="bg-surface-container-lowest custom-shadow rounded-xl border border-outline-variant/30 overflow-hidden">
+            <div class="px-lg py-md border-b border-outline-variant/30 flex justify-between items-center">
+                <h3 class="font-title-sm text-title-sm text-primary">Scan Control Interface</h3>
+                <span class="text-on-surface-variant flex items-center gap-1 text-[12px]">
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    System Ready
                 </span>
             </div>
-            <div class="card-body p-0">
-                <table class="table table-bordered mb-0">
-                    <tr>
-                        <th class="w-40 ps-3">Interface</th>
-                        <td>
-                            <span class="badge {{ ($scan['interface'] ?? 'WLAN') === 'LAN' ? 'bg-secondary' : 'bg-primary' }}">
-                                {{ strtoupper($scan['interface'] ?? 'WLAN') }}
-                            </span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="ps-3">SSID / Adapter</th>
-                        <td>{{ $scan['ssid'] ?? ($scan['interface'] === 'LAN' ? 'Ethernet' : '-') }}</td>
-                    </tr>
-                    <tr>
-                        <th class="ps-3">Tanggal</th>
-                        <td>{{ $scan['tanggal'] ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th class="ps-3">Jam</th>
-                        <td>{{ $scan['jam'] ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th class="ps-3">Download</th>
-                        <td class="text-info fw-semibold">{{ $scan['download'] ?? 0 }} <small class="text-muted">Mbps</small></td>
-                    </tr>
-                    <tr>
-                        <th class="ps-3">Upload</th>
-                        <td class="text-primary fw-semibold">{{ $scan['upload'] ?? 0 }} <small class="text-muted">Mbps</small></td>
-                    </tr>
-                    <tr>
-                        <th class="ps-3">Ping</th>
-                        <td class="text-warning fw-semibold">{{ $scan['ping'] ?? 0 }} <small class="text-muted">ms</small></td>
-                    </tr>
-                    <tr>
-                        <th class="ps-3">Signal</th>
-                        <td>
-                            @if(($scan['interface'] ?? 'WLAN') === 'LAN')
-                                <span class="text-muted">N/A (LAN)</span>
+            
+            <div class="p-lg">
+                <!-- Detection Zone -->
+                <div class="relative h-64 w-full border-2 border-dashed border-outline-variant/50 rounded-xl bg-surface-container-low flex flex-col items-center justify-center overflow-hidden mb-lg">
+                    <!-- Background Grid Effect -->
+                    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
+                    
+                    <!-- Animated Pulse -->
+                    <div class="relative flex items-center justify-center">
+                        <div class="absolute w-48 h-48 border border-secondary/20 rounded-full wifi-pulse"></div>
+                        <div class="absolute w-32 h-32 border border-secondary/40 rounded-full wifi-pulse" style="animation-delay: 0.5s"></div>
+                        <div class="absolute w-16 h-16 border border-secondary/60 rounded-full wifi-pulse" style="animation-delay: 1s"></div>
+                        <div class="z-10 bg-secondary w-20 h-20 rounded-full flex items-center justify-center shadow-lg shadow-secondary/30">
+                            @if(isset($scan) && ($scan['interface']??'WLAN')==='LAN')
+                                <span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings: 'FILL' 1;">ethernet</span>
                             @else
-                                {{ $scan['signal'] ?? 0 }} <small class="text-muted">dBm</small>
+                                <span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings: 'FILL' 1;">wifi</span>
                             @endif
-                        </td>
-                    </tr>
-                    <tr class="table-light">
-                        <th class="ps-3">Skor</th>
-                        <td>
-                            @php
-                                $score = $scan['score'] ?? 0;
-                                $scoreColor = $score >= 75 ? 'success' : ($score >= 60 ? 'warning' : 'danger');
-                            @endphp
-                            <span class="badge bg-{{ $scoreColor }} fs-5">{{ $score }}</span>
-                        </td>
-                    </tr>
-                    <tr class="table-light">
-                        <th class="ps-3">Kategori</th>
-                        <td>
-                            @php
-                                $kategori   = $scan['kategori'] ?? 'Buruk';
-                                $katColor   = match($kategori) {
-                                    'Sangat Baik' => 'success',
-                                    'Baik'        => 'primary',
-                                    'Cukup'       => 'warning',
-                                    default       => 'danger'
-                                };
-                            @endphp
-                            <span class="badge bg-{{ $katColor }} fs-5">{{ $kategori }}</span>
-                        </td>
-                    </tr>
-                    <tr class="table-light">
-                        <th class="ps-3">Standar</th>
-                        <td>
-                            <span class="badge bg-primary">{{ $scan['standar'] ?? '-' }}</span>
-                        </td>
-                    </tr>
-                </table>
+                        </div>
+                    </div>
+                    
+                    @if(isset($scan))
+                        <p class="mt-6 font-title-sm text-on-surface-variant">
+                            Terdeteksi: <strong>{{ strtoupper($scan['interface'] ?? 'WLAN') }}</strong>
+                            @if(($scan['interface']??'WLAN')==='WLAN')
+                                (SSID: {{ $scan['ssid'] ?? '—' }})
+                            @else
+                                (Ethernet Connected)
+                            @endif
+                        </p>
+                    @else
+                        <p class="mt-6 font-title-sm text-on-surface-variant">Scanning for active frequencies...</p>
+                    @endif
+                </div>
+
+                <!-- Interface Controls -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-lg mb-xl">
+                    <div>
+                        <label class="font-label-caps text-on-surface-variant mb-2 block">Detection Mode</label>
+                        @php
+                            $isWlan = !isset($scan) || ($scan['interface']??'WLAN') === 'WLAN';
+                        @endphp
+                        <div class="flex items-center gap-3 bg-secondary-container/10 p-3 rounded-lg border border-secondary/20">
+                            <div class="w-10 h-10 bg-secondary/10 text-secondary flex items-center justify-center rounded">
+                                <span class="material-symbols-outlined">{{ $isWlan ? 'router' : 'settings_ethernet' }}</span>
+                            </div>
+                            <div>
+                                <p class="font-title-sm text-sm text-primary leading-none">{{ $isWlan ? 'WLAN Jaringan' : 'LAN Connection' }}</p>
+                                <p class="text-[11px] text-on-surface-variant">{{ $isWlan ? ($scan['ssid'] ?? 'Wi-Fi Standard') : 'Kabel terhubung' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <form method="GET" action="{{ route('scan.manual.standar') }}" class="m-0" id="standarForm">
+                            <label class="font-label-caps text-on-surface-variant mb-2 block">Standar Penilaian</label>
+                            <select name="standar" onchange="this.form.submit()" class="w-full bg-surface-container border-outline-variant rounded-lg font-body-md text-sm py-2.5 focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all">
+                                @foreach($standards as $std)
+                                    <option value="{{ $std['key'] }}" {{ $activeKey===$std['key']?'selected':'' }}>
+                                        {{ $std['label'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Main Action Button -->
+                <form method="GET" action="{{ route('scan.manual') }}" id="scanForm">
+                    <input type="hidden" name="standar" value="{{ $activeKey }}">
+                    <button type="submit" class="w-full bg-secondary text-on-secondary py-4 rounded-xl font-display-lg text-lg flex items-center justify-center gap-3 shadow-lg shadow-secondary/20 hover:shadow-secondary/40 active:scale-[0.98] transition-all group">
+                        Mulai Scan Sekarang
+                        <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Progress Steps Footer -->
+            <div class="bg-surface-container-low px-lg py-md border-t border-outline-variant/30">
+                <div class="flex justify-between items-center max-w-md mx-auto">
+                    <div class="flex flex-col items-center gap-2 opacity-100">
+                        <div class="w-8 h-8 bg-secondary text-on-secondary rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-secondary/20">1</div>
+                        <span class="text-[11px] font-bold text-secondary uppercase tracking-tight">Initializing</span>
+                    </div>
+                    <div class="h-0.5 w-full bg-outline-variant mx-4"></div>
+                    <div class="flex flex-col items-center gap-2 opacity-50">
+                        <div class="w-8 h-8 bg-outline-variant text-on-surface rounded-full flex items-center justify-center text-xs font-bold">2</div>
+                        <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-tight">Calibration</span>
+                    </div>
+                    <div class="h-0.5 w-full bg-outline-variant mx-4"></div>
+                    <div class="flex flex-col items-center gap-2 opacity-50">
+                        <div class="w-8 h-8 bg-outline-variant text-on-surface rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                        <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-tight">Data Collection</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Additional Info / Help -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+            <div class="bg-surface-container-lowest custom-shadow p-md rounded-xl border border-outline-variant/30 flex gap-md items-start">
+                <div class="text-secondary p-2 bg-secondary/10 rounded-lg">
+                    <span class="material-symbols-outlined">info</span>
+                </div>
+                <div>
+                    <h4 class="font-title-sm text-sm text-primary">Informasi Scan</h4>
+                    <p class="text-xs text-on-surface-variant mt-1">Scan manual membutuhkan waktu sekitar 30-60 detik tergantung interferensi lokal.</p>
+                </div>
+            </div>
+            
+            <div class="bg-surface-container-lowest custom-shadow p-md rounded-xl border border-outline-variant/30 flex gap-md items-start">
+                <div class="text-tertiary-fixed-dim p-2 bg-tertiary-fixed-dim/10 rounded-lg">
+                    <span class="material-symbols-outlined">bolt</span>
+                </div>
+                <div>
+                    <h4 class="font-title-sm text-sm text-primary">Ultra Precision</h4>
+                    <p class="text-xs text-on-surface-variant mt-1">Menggunakan algoritma Netra DeepSense untuk hasil yang lebih akurat.</p>
+                </div>
             </div>
         </div>
     </div>
 
-    {{-- ===== INFO PANEL ===== --}}
-    <div class="col-md-5">
+    <!-- Right Column (42%) -->
+    @if(isset($scan))
+    <div class="w-full lg:w-[42%]">
+        <div class="sticky top-[88px] space-y-lg">
+            <section class="bg-surface-container-lowest custom-shadow rounded-xl border border-outline-variant/30 overflow-hidden">
+                <div class="px-lg py-md border-b border-outline-variant/30">
+                    <h3 class="font-title-sm text-title-sm text-primary">Scan Results</h3>
+                </div>
+                
+                <div class="p-lg">
+                    <!-- Score Donut Gauge -->
+                    @php
+                        $score = $scan['score'] ?? 0;
+                        $kategori = $scan['kategori'] ?? 'Buruk';
+                        $radius = 45;
+                        $circ = 2 * M_PI * $radius;
+                        $offset = $circ * (1 - $score / 100);
+                        
+                        $scColorClass = $score >= 90 ? 'text-secondary' : ($score >= 75 ? 'text-secondary-container' : ($score >= 60 ? 'text-warning' : 'text-error'));
+                        $scBgClass = $score >= 90 ? 'bg-green-100 text-green-700' : ($score >= 75 ? 'bg-blue-100 text-blue-700' : ($score >= 60 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'));
+                    @endphp
+                    <div class="flex flex-col items-center mb-xl">
+                        <div class="relative w-48 h-48">
+                            <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                                <circle class="text-surface-container-high" cx="50" cy="50" fill="transparent" r="{{ $radius }}" stroke="currentColor" stroke-width="8"></circle>
+                                <circle class="{{ $scColorClass }} transition-all duration-1000" cx="50" cy="50" fill="transparent" r="{{ $radius }}" stroke="currentColor" stroke-dasharray="{{ $circ }}" stroke-dashoffset="{{ $offset }}" stroke-width="8" stroke-linecap="round"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="font-display-lg text-4xl text-primary leading-none">{{ $score }}</span>
+                                <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mt-1">Netra Score</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 px-4 py-1.5 {{ $scBgClass }} rounded-full font-bold text-sm tracking-wide">
+                            {{ strtoupper($kategori) }}
+                        </div>
+                    </div>
 
-        {{-- Perbandingan Antar Standar --}}
-        @if(!empty($comparisons))
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body">
-                <h6 class="fw-semibold mb-2">
-                    <i class="bi bi-bar-chart-steps text-primary me-1"></i>Perbandingan Antar Standar
-                </h6>
-                <p class="small text-muted mb-2">Skor data scan ini kalau dinilai pakai standar lain:</p>
-                <table class="table table-sm mb-0">
-                    @foreach($comparisons as $cmp)
-                    <tr class="{{ $cmp['key'] === $activeKey ? 'table-primary' : '' }}">
-                        <td class="small">
-                            {{ $cmp['label'] }}
-                            @if($cmp['key'] === $activeKey)
-                                <i class="bi bi-check-circle-fill text-primary ms-1" title="Standar aktif"></i>
-                            @endif
-                        </td>
-                        <td class="text-end">
-                            <span class="badge bg-{{ $cmp['score'] >= 75 ? 'success' : ($cmp['score'] >= 60 ? 'warning' : 'danger') }}">
-                                {{ $cmp['score'] }}
-                            </span>
-                        </td>
-                        <td class="small text-muted text-end" style="width: 90px;">{{ $cmp['kategori'] }}</td>
-                    </tr>
-                    @endforeach
-                </table>
-            </div>
-        </div>
-        @endif
+                    <!-- Metric Cards Grid -->
+                    <div class="grid grid-cols-2 gap-md">
+                        <div class="p-4 bg-surface-container-low border border-outline-variant/20 rounded-xl">
+                            <div class="flex items-center gap-2 text-on-surface-variant mb-2">
+                                <span class="material-symbols-outlined text-sm">download</span>
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Download</span>
+                            </div>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-xl font-bold text-primary">{{ number_format($scan['download'] ?? 0, 1) }}</span>
+                                <span class="text-[11px] text-on-surface-variant">Mbps</span>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-surface-container-low border border-outline-variant/20 rounded-xl">
+                            <div class="flex items-center gap-2 text-on-surface-variant mb-2">
+                                <span class="material-symbols-outlined text-sm">upload</span>
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Upload</span>
+                            </div>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-xl font-bold text-primary">{{ number_format($scan['upload'] ?? 0, 1) }}</span>
+                                <span class="text-[11px] text-on-surface-variant">Mbps</span>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-surface-container-low border border-outline-variant/20 rounded-xl">
+                            <div class="flex items-center gap-2 text-on-surface-variant mb-2">
+                                <span class="material-symbols-outlined text-sm">timer</span>
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Ping</span>
+                            </div>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-xl font-bold text-primary">{{ number_format($scan['ping'] ?? 0, 1) }}</span>
+                                <span class="text-[11px] text-on-surface-variant">ms</span>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-surface-container-low border border-outline-variant/20 rounded-xl">
+                            <div class="flex items-center gap-2 text-on-surface-variant mb-2">
+                                <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">signal_cellular_alt</span>
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Signal</span>
+                            </div>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-xl font-bold text-primary">
+                                    @if(($scan['interface']??'WLAN')==='LAN')
+                                        N/A
+                                    @else
+                                        {{ $scan['signal'] ?? 0 }}
+                                    @endif
+                                </span>
+                                @if(($scan['interface']??'WLAN')!=='LAN')
+                                    <span class="text-[11px] text-on-surface-variant">dBm</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body">
-                <h6 class="fw-semibold mb-2">
-                    <i class="bi bi-info-circle text-info me-1"></i>Info Standar Aktif
-                </h6>
-                @php $activeStd = collect($standards)->firstWhere('key', $activeKey); @endphp
-                <p class="small text-muted mb-2">{{ $activeStd['deskripsi'] ?? '' }}</p>
-                @php $cfg = config("scoring.{$activeKey}.weights"); @endphp
-                <ul class="list-unstyled small mb-0">
-                    <li>📥 Download &nbsp;: <strong>{{ ($cfg['download'] ?? 0) * 100 }}%</strong></li>
-                    <li>📤 Upload &nbsp;&nbsp;&nbsp;: <strong>{{ ($cfg['upload'] ?? 0) * 100 }}%</strong></li>
-                    <li>⚡ Ping &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <strong>{{ ($cfg['ping'] ?? 0) * 100 }}%</strong></li>
-                    <li>📶 Signal &nbsp;&nbsp;&nbsp;: <strong>{{ ($cfg['signal'] ?? 0) * 100 }}%</strong></li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="alert alert-warning border-0 small">
-            <i class="bi bi-exclamation-triangle me-1"></i>
-            <strong>Preview saja</strong> — data ini <strong>tidak disimpan</strong> ke database.
-            Scan otomatis berjalan setiap 1 jam dan menyimpan data secara otomatis.
+                <!-- Collapsible Table -->
+                @if(!empty($comparisons))
+                <div class="border-t border-outline-variant/30">
+                    <details class="group" open>
+                        <summary class="flex justify-between items-center px-lg py-md cursor-pointer hover:bg-surface-container-high transition-colors">
+                            <h4 class="font-title-sm text-sm text-primary">Perbandingan Standar</h4>
+                            <span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+                        </summary>
+                        <div class="px-lg pb-lg">
+                            <table class="w-full text-xs">
+                                <thead>
+                                    <tr class="text-on-surface-variant border-b border-outline-variant/30">
+                                        <th class="py-2 text-left font-bold uppercase tracking-wider">Standar</th>
+                                        <th class="py-2 text-center font-bold uppercase tracking-wider">Skor</th>
+                                        <th class="py-2 text-right font-bold uppercase tracking-wider">Kategori</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-on-surface">
+                                    @foreach($comparisons as $cmp)
+                                        <tr class="border-b border-outline-variant/10 {{ $cmp['key'] === $activeKey ? 'bg-secondary/5 font-semibold' : '' }}">
+                                            <td class="py-3">
+                                                {{ $cmp['label'] }}
+                                                @if($cmp['key'] === $activeKey)
+                                                    <span class="material-symbols-outlined text-[14px] text-secondary ml-1" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                                @endif
+                                            </td>
+                                            <td class="py-3 text-center">
+                                                @php $cc = $cmp['score'] >= 75 ? 'text-secondary' : ($cmp['score'] >= 60 ? 'text-warning' : 'text-error'); @endphp
+                                                <span class="{{ $cc }} font-bold">{{ $cmp['score'] }}</span>
+                                            </td>
+                                            <td class="py-3 text-right text-on-surface-variant">{{ $cmp['kategori'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                </div>
+                @endif
+                
+                <!-- Preview warning -->
+                <div class="m-3 p-3 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg flex items-start gap-2 text-xs">
+                    <span class="material-symbols-outlined text-[16px] mt-0.5" style="font-variation-settings: 'FILL' 1;">warning</span>
+                    <span><strong>Preview saja</strong> — data ini tidak disimpan ke database. Scan otomatis berjalan tiap 1 jam.</span>
+                </div>
+            </section>
         </div>
     </div>
-
+    @endif
 </div>
-@else
-<div class="alert alert-danger">Tidak ada data scan.</div>
-@endif
 @endsection
+
+@push('scripts')
+<script>
+    // Simulating scan progress feedback in UI
+    const scanForm = document.getElementById('scanForm');
+    if(scanForm) {
+        scanForm.addEventListener('submit', function() {
+            const btn = this.querySelector('button[type="submit"]');
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Memproses Scan Jaringan...';
+            btn.classList.add('opacity-80', 'pointer-events-none');
+        });
+    }
+</script>
+@endpush
