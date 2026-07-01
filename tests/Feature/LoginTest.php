@@ -66,33 +66,19 @@ class LoginTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
-    public function halaman_auth_google_mengarahkan_ke_mock_chooser_jika_env_kosong()
+    public function halaman_auth_google_mengarahkan_ke_google_oauth_redirect()
     {
-        config(['services.google.client_id' => '']);
-        config(['services.google.client_secret' => '']);
+        config(['services.google.client_id' => 'mock-client-id']);
+        config(['services.google.client_secret' => 'mock-client-secret']);
+        config(['services.google.redirect' => 'http://localhost/auth/google/callback']);
+
+        $provider = Mockery::mock('Laravel\Socialite\Two\GoogleProvider');
+        $provider->shouldReceive('redirect')->andReturn(redirect('https://accounts.google.com/o/oauth2/auth'));
+
+        Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
 
         $response = $this->get(route('auth.google'));
-        $response->assertRedirect(route('auth.google.mock'));
-    }
-
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function halaman_mock_chooser_dapat_diakses()
-    {
-        $response = $this->get(route('auth.google.mock'));
-        $response->assertStatus(200);
-        $response->assertViewIs('auth.google-mock');
-    }
-
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function handle_mock_login_menyimpan_user_dan_log_in()
-    {
-        $response = $this->post(route('auth.google.mock-login'), [
-            'name' => 'Mock Google User',
-            'email' => 'mock.google@gmail.com',
-        ]);
-
-        $response->assertRedirect(route('dashboard'));
-        $this->assertDatabaseHas('users', ['email' => 'mock.google@gmail.com']);
+        $response->assertRedirect('https://accounts.google.com/o/oauth2/auth');
     }
 
     #[\PHPUnit\Framework\Attributes\Test]

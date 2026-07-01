@@ -15,8 +15,6 @@ Route::post('/logout',[LoginController::class, 'destroy'])->middleware('auth')->
 
 Route::get('/auth/google',              [GoogleController::class, 'redirectToGoogle'])->middleware('guest')->name('auth.google');
 Route::get('/auth/google/callback',      [GoogleController::class, 'handleGoogleCallback'])->middleware('guest');
-Route::get('/auth/google/mock-chooser',  [GoogleController::class, 'showMockPage'])->middleware('guest')->name('auth.google.mock');
-Route::post('/auth/google/mock-login',   [GoogleController::class, 'handleMockLogin'])->middleware('guest')->name('auth.google.mock-login');
 
 // ── Protected ─────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
