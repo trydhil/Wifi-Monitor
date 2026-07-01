@@ -89,13 +89,21 @@
                 </div>
 
                 <!-- Main Action Button -->
-                <form method="GET" action="{{ route('scan.manual') }}" id="scanForm">
-                    <input type="hidden" name="standar" value="{{ $activeKey }}">
-                    <button type="submit" class="w-full bg-secondary text-on-secondary py-4 rounded-xl font-display-lg text-lg flex items-center justify-center gap-3 shadow-lg shadow-secondary/20 hover:shadow-secondary/40 active:scale-[0.98] transition-all group">
-                        Mulai Scan Sekarang
-                        <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
-                    </button>
-                </form>
+                @if(isset($scan))
+                    <a href="{{ route('scan.manual', ['clear' => 1]) }}" class="w-full bg-secondary text-on-secondary py-4 rounded-xl font-display-lg text-lg flex items-center justify-center gap-3 shadow-lg shadow-secondary/20 hover:shadow-secondary/40 active:scale-[0.98] transition-all group">
+                        Scan Ulang Jaringan
+                        <span class="material-symbols-outlined group-hover:rotate-180 transition-transform duration-500">refresh</span>
+                    </a>
+                @else
+                    <form method="POST" action="{{ route('scan.manual.run') }}" id="scanForm" class="m-0">
+                        @csrf
+                        <input type="hidden" name="standar" value="{{ $activeKey }}">
+                        <button type="submit" class="w-full bg-secondary text-on-secondary py-4 rounded-xl font-display-lg text-lg flex items-center justify-center gap-3 shadow-lg shadow-secondary/20 hover:shadow-secondary/40 active:scale-[0.98] transition-all group">
+                            Mulai Scan Sekarang
+                            <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+                        </button>
+                    </form>
+                @endif
             </div>
             
             <!-- Progress Steps Footer -->
@@ -290,14 +298,122 @@
 
 @push('scripts')
 <script>
-    // Simulating scan progress feedback in UI
+document.addEventListener('DOMContentLoaded', function() {
     const scanForm = document.getElementById('scanForm');
-    if(scanForm) {
-        scanForm.addEventListener('submit', function() {
-            const btn = this.querySelector('button[type="submit"]');
-            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Memproses Scan Jaringan...';
-            btn.classList.add('opacity-80', 'pointer-events-none');
+    const detectionZone = document.querySelector('.relative.h-64');
+    
+    if (scanForm && detectionZone) {
+        scanForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Simpan tombol dan matikan interaksi
+            const submitBtn = scanForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'pointer-events-none');
+            }
+
+            // Ganti konten Detection Zone dengan UI progress loading
+            detectionZone.innerHTML = `
+                <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
+                
+                <div class="relative flex flex-col items-center justify-center w-full px-lg">
+                    <!-- Rotating loader icon -->
+                    <div class="relative w-20 h-20 mb-md flex items-center justify-center">
+                        <div class="absolute inset-0 rounded-full border-4 border-outline-variant/30"></div>
+                        <div class="absolute inset-0 rounded-full border-4 border-secondary border-t-transparent animate-spin"></div>
+                        <span class="material-symbols-outlined text-secondary text-3xl font-bold">radar</span>
+                    </div>
+                    
+                    <!-- Progress Percentage -->
+                    <div class="text-2xl font-bold text-primary mb-1" id="scan-progress-pct">0%</div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="w-64 bg-surface-container-high rounded-full h-2 mb-sm overflow-hidden border border-outline-variant/30">
+                        <div id="scan-progress-bar" class="bg-secondary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    
+                    <!-- Dynamic Status Text -->
+                    <div class="text-xs text-on-surface-variant font-medium tracking-wide uppercase" id="scan-progress-text">Mendeteksi Antarmuka Jaringan...</div>
+                </div>
+            `;
+            
+            // Start AJAX call to trigger Python scan
+            let ajaxCompleted = false;
+            let scanError = null;
+            
+            fetch("{{ route('scan.manual.run') }}", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Gagal mengambil data scan.");
+                return res.json();
+            })
+            .then(data => {
+                ajaxCompleted = true;
+            })
+            .catch(err => {
+                ajaxCompleted = true;
+                scanError = err.message;
+            });
+            
+            // smooth progress simulation
+            let progress = 0;
+            const progressTexts = [
+                { limit: 20, text: "Mendeteksi Antarmuka Jaringan..." },
+                { limit: 45, text: "Mengukur Kecepatan Unduh (Download)..." },
+                { limit: 70, text: "Mengukur Kecepatan Unggah (Upload)..." },
+                { limit: 90, text: "Menguji Latensi & Ping..." },
+                { limit: 100, text: "Menghitung Skor Kualitas Jaringan..." }
+            ];
+            
+            const pctEl = document.getElementById('scan-progress-pct');
+            const barEl = document.getElementById('scan-progress-bar');
+            const txtEl = document.getElementById('scan-progress-text');
+            
+            const interval = setInterval(() => {
+                // If ajax is not done, caps progress at 95%
+                if (!ajaxCompleted) {
+                    if (progress < 95) {
+                        progress += Math.floor(Math.random() * 4) + 1;
+                        if (progress > 95) progress = 95;
+                    }
+                } else {
+                    // AJAX is done, speed up to 100%
+                    if (progress < 100) {
+                        progress += 5;
+                        if (progress > 100) progress = 100;
+                    }
+                }
+                
+                // Update UI elements
+                pctEl.textContent = progress + '%';
+                barEl.style.width = progress + '%';
+                
+                // Update status text based on progress
+                const textObj = progressTexts.find(pt => progress <= pt.limit);
+                if (textObj) {
+                    txtEl.textContent = textObj.text;
+                }
+                
+                // When reaches 100% and AJAX is complete, check for redirect
+                if (progress >= 100 && ajaxCompleted) {
+                    clearInterval(interval);
+                    if (scanError) {
+                        alert(scanError);
+                        window.location.reload();
+                    } else {
+                        // Reload the page to display results from the session!
+                        window.location.href = "{{ route('scan.manual') }}";
+                    }
+                }
+            }, 100);
         });
     }
+});
 </script>
 @endpush

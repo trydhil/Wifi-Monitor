@@ -16,6 +16,7 @@ Route::post('/logout',[LoginController::class, 'destroy'])->middleware('auth')->
 Route::middleware('auth')->group(function () {
     Route::get('/',              [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/scan-manual',   [ManualScanController::class, 'scan'])->name('scan.manual');
+    Route::post('/scan-manual/run', [ManualScanController::class, 'runScan'])->name('scan.manual.run');
     Route::get('/scan-manual/standar', [ManualScanController::class, 'setStandar'])->name('scan.manual.standar');
     Route::get('/history',       [HistoryController::class, 'index'])->name('history');
     Route::delete('/history/{id}', [HistoryController::class, 'destroy'])->name('history.destroy');
