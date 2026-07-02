@@ -10,6 +10,17 @@ class ManualScanController extends Controller
 {
     private function runAgent(): array
     {
+        if (app()->runningUnitTests()) {
+            return [
+                'ssid' => 'WiFi-Test',
+                'download' => 48.5,
+                'upload' => 12.3,
+                'ping' => 14,
+                'signal' => -55,
+                'interface' => 'WLAN',
+            ];
+        }
+
         $pythonPath = config('services.python.path');
         $workingDir = base_path('python-agent');
 

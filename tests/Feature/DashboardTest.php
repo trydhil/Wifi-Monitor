@@ -58,7 +58,15 @@ class DashboardTest extends TestCase
     #[\PHPUnit\Framework\Attributes\Test]
     public function kategori_scan_terakhir_tampil_di_dashboard()
     {
-        Scan::factory()->create(['score' => 92, 'kategori' => 'Sangat Baik']);
+        Scan::factory()->create([
+            'download' => 100,
+            'upload' => 50,
+            'ping' => 5,
+            'signal' => null,
+            'interface' => 'LAN',
+            'score' => 95,
+            'kategori' => 'Sangat Baik'
+        ]);
 
         $response = $this->actingAs($this->user)->get(route('dashboard'));
         $response->assertSee('Sangat Baik');

@@ -211,7 +211,7 @@
                         <div class="pt-md border-t border-outline-variant/30 flex justify-between items-center text-sm font-medium">
                             <span class="font-body-md text-primary">Daily Auto-export</span>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input class="sr-only peer" type="checkbox">
+                                <input class="sr-only peer" type="checkbox" name="auto_export" value="1" {{ ($exportSettings['auto_export'] ?? false) ? 'checked' : '' }}>
                                 <div class="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary"></div>
                             </label>
                         </div>

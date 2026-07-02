@@ -59,21 +59,54 @@ class HistoryController extends Controller
         $ssidList = Scan::distinct()->orderBy('ssid')->pluck('ssid');
 
         // ── Analisis: Avg Score per SSID ─────────────────────────────
-        $ssidComparison = Scan::select('ssid', DB::raw('ROUND(AVG(score),1) as avg_score'))
-            ->whereNotNull('ssid')
-            ->groupBy('ssid')
-            ->orderByDesc('avg_score')
-            ->limit(6)
-            ->get();
+        $allScans = Scan::whereNotNull('ssid')->get();
+        $ssidComparison = $allScans->map(function ($scan) use ($activeKey) {
+            $scored = ScoringService::calculate(
+                download:   $scan->download  ?? 0,
+                upload:     $scan->upload    ?? 0,
+                ping:       $scan->ping      ?? 0,
+                signal:     $scan->signal    ?? null,
+                interface:  $scan->interface ?? 'WLAN',
+                standarKey: $activeKey,
+            );
+            $scan->score = $scored['score'];
+            return $scan;
+        })
+        ->groupBy('ssid')
+        ->map(function ($group, $ssid) {
+            return (object)[
+                'ssid' => $ssid,
+                'avg_score' => round($group->avg('score'), 1)
+            ];
+        })
+        ->sortByDesc('avg_score')
+        ->take(6)
+        ->values();
 
         // ── Analisis: Hourly Performance ─────────────────────────────
-        $hourlyComparison = Scan::select(
-                DB::raw("CAST(strftime('%H', jam) AS INTEGER) as hour"),
-                DB::raw('ROUND(AVG(score),1) as avg_score')
-            )
-            ->groupBy('hour')
-            ->orderBy('hour')
-            ->get();
+        $hourlyComparison = $allScans->map(function ($scan) use ($activeKey) {
+            $scored = ScoringService::calculate(
+                download:   $scan->download  ?? 0,
+                upload:     $scan->upload    ?? 0,
+                ping:       $scan->ping      ?? 0,
+                signal:     $scan->signal    ?? null,
+                interface:  $scan->interface ?? 'WLAN',
+                standarKey: $activeKey,
+            );
+            $scan->score = $scored['score'];
+            return $scan;
+        })
+        ->groupBy(function ($scan) {
+            return (int) date('H', strtotime($scan->jam));
+        })
+        ->map(function ($group, $hour) {
+            return (object)[
+                'hour' => $hour,
+                'avg_score' => round($group->avg('score'), 1)
+            ];
+        })
+        ->sortBy('hour')
+        ->values();
 
         // Jam rawan = jam dengan avg_score terendah
         $peakHour = $hourlyComparison->sortBy('avg_score')->first()?->hour;
@@ -105,7 +138,24 @@ class HistoryController extends Controller
         for ($i = 3; $i >= 0; $i--) {
             $start = now()->subWeeks($i)->startOfWeek();
             $end   = now()->subWeeks($i)->endOfWeek();
-            $avg   = Scan::whereBetween('created_at', [$start, $end])->avg('score');
+            
+            $weekScans = Scan::whereBetween('created_at', [$start, $end])->get();
+            if ($weekScans->isEmpty()) {
+                $avg = 0;
+            } else {
+                $avg = $weekScans->map(function ($scan) use ($activeKey) {
+                    $scored = ScoringService::calculate(
+                        download:   $scan->download  ?? 0,
+                        upload:     $scan->upload    ?? 0,
+                        ping:       $scan->ping      ?? 0,
+                        signal:     $scan->signal    ?? null,
+                        interface:  $scan->interface ?? 'WLAN',
+                        standarKey: $activeKey,
+                    );
+                    return $scored['score'];
+                })->average();
+            }
+            
             $weeklyTrend->push([
                 'week_label' => 'Week ' . (4 - $i),
                 'avg_score'  => round($avg ?? 0, 1),

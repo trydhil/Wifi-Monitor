@@ -55,27 +55,29 @@ class SettingsController extends Controller
 
         // Save export settings
         $exportSettings = [
-            'format'  => $request->input('export_format', 'xlsx'),
-            'prefix'  => $request->input('export_prefix', 'NETRA_SCAN_'),
-            'columns' => $request->input('export_columns', ['tanggal','jam','interface','ssid','download','upload','ping','signal','score','kategori']),
+            'format'      => $request->input('export_format', 'xlsx'),
+            'prefix'      => $request->input('export_prefix', 'NETRA_SCAN_'),
+            'columns'     => $request->input('export_columns', ['tanggal','jam','interface','ssid','download','upload','ping','signal','score','kategori']),
+            'auto_export' => $request->boolean('auto_export'),
         ];
         file_put_contents(storage_path('app/export_settings.json'), json_encode($exportSettings));
 
-        // Bobot sum validation
-        $total = $validated['weight_download'] + $validated['weight_upload']
-               + $validated['weight_ping']    + $validated['weight_signal'];
+        // Bobot sum validation (expected decimal sum = 1.0 or 100%)
+        $totalDecimal = $validated['weight_download'] + $validated['weight_upload']
+                      + $validated['weight_ping']    + $validated['weight_signal'];
 
-        if (abs($total - 100) > 1) {
+        if (abs($totalDecimal - 1.0) > 0.01) {
+            $totalPct = round($totalDecimal * 100);
             return back()->withInput()
-                ->withErrors(['weight_download' => "Total bobot harus = 100% (saat ini: {$total}%)"]);
+                ->withErrors(['weight_download' => "Total bobot harus = 100% (saat ini: {$totalPct}%)"]);
         }
 
-        // Konversi persen → desimal untuk storage
+        // Simpan desimal langsung ke storage
         CustomScoringSetting::current()->update([
-            'weight_download'    => $validated['weight_download']    / 100,
-            'weight_upload'      => $validated['weight_upload']      / 100,
-            'weight_ping'        => $validated['weight_ping']        / 100,
-            'weight_signal'      => $validated['weight_signal']      / 100,
+            'weight_download'    => $validated['weight_download'],
+            'weight_upload'      => $validated['weight_upload'],
+            'weight_ping'        => $validated['weight_ping'],
+            'weight_signal'      => $validated['weight_signal'],
             'threshold_download' => $validated['threshold_download'],
             'threshold_upload'   => $validated['threshold_upload'],
             'threshold_ping'     => $validated['threshold_ping'],

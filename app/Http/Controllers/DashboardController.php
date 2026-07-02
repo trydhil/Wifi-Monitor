@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Scan;
 use App\Services\InsightService;
+use App\Services\ScoringService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\Process\Process;
@@ -44,6 +45,21 @@ class DashboardController extends Controller
             }
         }
 
+        $activeKey = ScoringService::activeKey();
+
+        if ($latest) {
+            $scored = ScoringService::calculate(
+                download:   $latest->download  ?? 0,
+                upload:     $latest->upload    ?? 0,
+                ping:       $latest->ping      ?? 0,
+                signal:     $latest->signal    ?? null,
+                interface:  $latest->interface ?? 'WLAN',
+                standarKey: $activeKey,
+            );
+            $latest->score    = $scored['score'];
+            $latest->kategori = $scored['kategori'];
+        }
+
         $totalScans = $stats->total_scan ?? 0;
         $lastWeekScans = Scan::where('created_at', '<', now()->subWeek())->count();
         if ($lastWeekScans > 0) {
@@ -59,14 +75,29 @@ class DashboardController extends Controller
 
         $ssidList = Scan::select('ssid')->distinct()->orderBy('ssid')->pluck('ssid');
 
-        $chartDaily = Scan::selectRaw("
-            DATE(created_at)     AS tanggal,
-            ROUND(AVG(score), 1) AS avg_score
-        ")
-            ->where('created_at', '>=', now()->subDays(6)->startOfDay())
-            ->groupBy('tanggal')
-            ->orderBy('tanggal')
-            ->get();
+        $dailyScans = Scan::where('created_at', '>=', now()->subDays(6)->startOfDay())->get();
+        $chartDaily = $dailyScans->map(function ($scan) use ($activeKey) {
+            $scored = ScoringService::calculate(
+                download:   $scan->download  ?? 0,
+                upload:     $scan->upload    ?? 0,
+                ping:       $scan->ping      ?? 0,
+                signal:     $scan->signal    ?? null,
+                interface:  $scan->interface ?? 'WLAN',
+                standarKey: $activeKey,
+            );
+            $scan->score = $scored['score'];
+            $scan->tanggal = date('Y-m-d', strtotime($scan->created_at));
+            return $scan;
+        })
+        ->groupBy('tanggal')
+        ->map(function ($group, $tanggal) {
+            return (object)[
+                'tanggal' => $tanggal,
+                'avg_score' => round($group->avg('score'), 1)
+            ];
+        })
+        ->sortBy('tanggal')
+        ->values();
 
         $chartMetrics = Scan::select('created_at', 'download', 'upload', 'ping')
             ->latest()->limit(20)->get()->reverse()->values();
@@ -76,6 +107,19 @@ class DashboardController extends Controller
         [$news, $newsUpdatedAt] = $this->fetchNews();
 
         $recentScans = Scan::with('user')->latest()->limit(5)->get();
+        $recentScans->transform(function ($scan) use ($activeKey) {
+            $scored = ScoringService::calculate(
+                download:   $scan->download  ?? 0,
+                upload:     $scan->upload    ?? 0,
+                ping:       $scan->ping      ?? 0,
+                signal:     $scan->signal    ?? null,
+                interface:  $scan->interface ?? 'WLAN',
+                standarKey: $activeKey,
+            );
+            $scan->score    = $scored['score'];
+            $scan->kategori = $scored['kategori'];
+            return $scan;
+        });
 
         return view('dashboard', compact(
             'stats', 'latest', 'ssidList',
